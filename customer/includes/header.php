@@ -29,4 +29,28 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] != true) {
         integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous"> -->
 
   <title> <?php echo $title; ?> - Hyper Local Service Provider</title>
+  <style>
+    /* GLOBAL MOBILE FIXES */
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    body {
+      overflow-x: hidden;
+      /* Prevent horizontal scroll */
+    }
+
+    /* Fix Cards on Mobile */
+    @media (max-width: 576px) {
+      .card {
+        margin-bottom: 20px;
+      }
+
+      .container {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+    }
+  </style>
 </head>

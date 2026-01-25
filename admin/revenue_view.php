@@ -113,18 +113,7 @@ include 'assets/include/admin_header.php';
     </div>
 
     <!-- Page JavaScript Files-->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/jquery-1.12.4.min.js"></script>
-    <script src="assets/js/popper.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-    <script src="assets/js/sweetalert.js"></script>
-    <script src="assets/js/progressbar.min.js"></script>
-    <script src="assets/js/charts/canvas.min.js"></script>
-    <script src="assets/js/calendar/bootstrap_calendar.js"></script>
-    <script src="assets/js/calendar/demo.js"></script>
-    <script src="assets/js/jquery.dataTables.min.js"></script>
-    <script src="assets/js/dataTables.bootstrap4.min.js"></script>
-    <script src="assets/js/custom.js"></script>
+    <!-- Scripts are included in admin_footer.php -->
     <script>
         $('#example').DataTable({
             "order": [[0, "desc"]]

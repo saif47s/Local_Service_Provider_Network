@@ -21,7 +21,7 @@ Open your VS Code Terminal (Ctrl + `) and run these commands one by one:
 2.  **Add All Files:**
     ```powershell
     git add .
-    ```
+    ```yh 
 
 3.  **Commit Code:**
     ```powershell

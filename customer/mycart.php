@@ -84,56 +84,59 @@ $db_pincode = $u_row['pincode'];
             } else {
                 ?>
                 <div class="col-lg-9">
-                    <table class="table">
-                        <thead class="thead-light text-center">
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Service</th>
-                                <th scope="col">Service Provider</th>
-                                <th scope="col">Price</th>
-                                <th scope="col">Quantity</th>
-                                <th scope="col">Total</th>
-                                <th scope="col">Operation</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-center">
-                            <?php
-                            foreach ($_SESSION['cart'] as $key => $value) {
-                                $sr = $key + 1;
-                                ?>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="thead-light text-center">
                                 <tr>
-                                    <th scope="row"><?php echo $sr; ?></th>
-                                    <td><?php echo $value['service_title']; ?></td>
-                                    <td><?php echo $value['sp_name']; ?></td>
-                                    <td>
-                                        <small>Rs. </small><?php echo $value['price']; ?>
-                                        <input type="hidden" class="iprice" value="<?php echo $value['price']; ?>">
-                                    </td>
-                                    <!-- quantity -->
-                                    <form action="manage_cart.php" method="post">
-                                        <td><input type="number" pattern="[1-9]\d*" class="text-center iquantity"
-                                                name="Mod_Quantity" onchange="this.form.submit();"
-                                                value="<?php echo $value['quantity']; ?>" min="1" step="1"
-                                                oninput="validity.valid||(value='');"></td>
-                                        <input type="hidden" name="service_title"
-                                            value="<?php echo $value['service_title']; ?>">
-                                    </form>
-                                    <!-- line Total -->
-                                    <td class="itotal"></td>
-                                    <!-- remove button -->
-                                    <td>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Service</th>
+                                    <th scope="col">Service Provider</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col">Operation</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center">
+                                <?php
+                                foreach ($_SESSION['cart'] as $key => $value) {
+                                    $sr = $key + 1;
+                                    ?>
+                                    <tr>
+                                        <th scope="row"><?php echo $sr; ?></th>
+                                        <td><?php echo $value['service_title']; ?></td>
+                                        <td><?php echo $value['sp_name']; ?></td>
+                                        <td>
+                                            <small>Rs. </small><?php echo $value['price']; ?>
+                                            <input type="hidden" class="iprice" value="<?php echo $value['price']; ?>">
+                                        </td>
+                                        <!-- quantity -->
                                         <form action="manage_cart.php" method="post">
-                                            <button class="btn btn-sm btn-outline-danger" name="remove_service">Remove</button>
+                                            <td><input type="number" pattern="[1-9]\d*" class="text-center iquantity"
+                                                    name="Mod_Quantity" onchange="this.form.submit();"
+                                                    value="<?php echo $value['quantity']; ?>" min="1" step="1"
+                                                    oninput="validity.valid||(value='');"></td>
                                             <input type="hidden" name="service_title"
                                                 value="<?php echo $value['service_title']; ?>">
                                         </form>
-                                    </td>
-                                </tr>
-                                <?php
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                        <!-- line Total -->
+                                        <td class="itotal"></td>
+                                        <!-- remove button -->
+                                        <td>
+                                            <form action="manage_cart.php" method="post">
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                    name="remove_service">Remove</button>
+                                                <input type="hidden" name="service_title"
+                                                    value="<?php echo $value['service_title']; ?>">
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="col-lg-3">
@@ -174,7 +177,7 @@ $db_pincode = $u_row['pincode'];
 
                                 <div class="form-group">
                                     <label>Pincode</label>
-                                    <input type="text" class="form-control" pattern="\d{6}" name="pincode" id="pincode" required
+                                    <input type="text" class="form-control" pattern="\d{5}" name="pincode" id="pincode" required
                                         data-correct="<?php echo $db_pincode; ?>"
                                         oninput="validateField(this, 'Pincode mismatch')">
                                     <div class="invalid-feedback">Invalid Pincode (Must match registered pincode)</div>
@@ -294,5 +297,5 @@ $db_pincode = $u_row['pincode'];
 
     <?php
     include '../includes/footer.php';
-    // include 'includes/navfooter.php';
+    include 'includes/navfooter.php';
     ?>

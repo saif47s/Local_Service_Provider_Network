@@ -65,7 +65,7 @@ include 'assets/include/admin_header.php';
                         </thead>
                         <tbody>
                             <?php // CUSTOMER TRASH CODE.
-                            $sql = "SELECT `customer`.* , `city`.*, `login`.`account_status`
+                            $sql = "SELECT `customer`.* , `city`.*, `login`.`account_status`, `login`.`activation_request`
                             FROM `customer` 
                             INNER JOIN `city` ON `customer`.city_id=`city`.city_id
                             INNER JOIN `login` ON `customer`.login_id=`login`.login_id
@@ -84,11 +84,15 @@ include 'assets/include/admin_header.php';
                                     $city = $row['city_name'];
                                     $address = $row['address'];
                                     $pincode = $row['pincode'];
+                                    $req = $row['activation_request'];
 
                                     ?>
                                     <tr>
                                         <td><?php echo $sno ?></td>
-                                        <td><?php echo $first_name . " " . $last_name ?></td>
+                                        <td>
+                                            <?php echo $first_name . " " . $last_name ?>
+                                            <?php if($req == 1) { echo '<span class="badge badge-warning ml-2">Active Request</span>'; } ?>
+                                        </td>
                                         <td><?php echo $email ?></td>
                                         <td><?php echo $phone ?></td>
                                         <td><?php echo $city ?></td>
@@ -99,6 +103,11 @@ include 'assets/include/admin_header.php';
                                                 onclick="return confirm('Do you want to Restore this customer?');"
                                                 class="btn btn-success btn-sm">
                                                 <i class="fa fa-undo"></i> Restore
+                                            </a>
+                                            <a href="customer_permanent_del.php?id=<?php echo $login_id; ?>"
+                                                onclick="return confirm('Permanent delete customer. Delete all records of customer.');"
+                                                class="btn btn-danger btn-sm">
+                                                <i class="fa fa-trash"></i> Delete
                                             </a>
                                         </td>
                                     </tr>

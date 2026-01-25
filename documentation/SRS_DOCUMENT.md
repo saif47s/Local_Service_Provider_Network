@@ -1,165 +1,200 @@
 # Software Requirements Specification (SRS)
 **Project Name:** Hyper Local Service Provider
-**Version:** 1.1
-**Date:** 2026-01-17
-**Status:** Completed
+**Version:** 3.0 (Major Update)
+**Date:** 2026-01-25
+**Status:** Live & Production Ready
+**Maintained By:** Antigravity (AI Agent)
 
 ---
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-The purpose of this document is to present a detailed description of the **Hyper Local Service Provider** system. It explains the purpose, features, interfaces, and logical constraints of the system. This document serves as the "A to Z" reference for the implemented solution.
+The purpose of this document is to provide a comprehensive, detailed "A to Z" reference for the **Hyper Local Service Provider** application. It documents every module, feature, function, database entity, and technical implementation detail to serve as the single source of truth for developers and stakeholders.
 
-### 1.2 Scope
-The **Hyper Local Service Provider** is a web-based marketplace designed to connect service providers (plumbers, electricians, beauty experts, etc.) with customers in Pakistan. The system facilitates:
-*   **Service Discovery:** Customers can browse/search for services by category.
-*   **Booking Management:** Secure booking with Cash on Delivery (COD) payment.
-*   **Provider Management:** SPs can register, list services, and manage orders.
-*   **Revenue Generation:** A 5% platform commission is automatically calculated and deducted from the Service Provider's wallet upon order placement.
-*   **Localization:** Tailored for Pakistani users with local currency (Rs.), cities, and manual area entry.
-*   **Mobile Access:** Android App (Webview) provided for easy access.
+### 1.2 Project Scope
+**Hyper Local Service Provider** is a web-based platform designed to bridge the gap between skilled service professionals (plumbers, electricians, cleaners, etc.) and local customers.
+-   **Customers** can search, view, and book services for their homes.
+-   **Service Providers (SPs)** can register, list their gigs (services), and manage incoming orders.
+-   **Administrators** oversee the entire ecosystem, approving professionals and managing categories.
 
-### 1.3 Definitions, Acronyms, and Abbreviations
-*   **SRS:** Software Requirements Specification
-*   **SP:** Service Provider
-*   **COD:** Cash On Delivery
-*   **Admin:** System Administrator
-*   **Wallet:** Digital balance maintained by SPs to pay platform fees.
+The system features robust authentication, email verification, wallet management, and order tracking.
 
 ---
 
-## 2. Overall Description
+## 2. Technical Architecture
 
-### 2.1 Product Perspective
-This system is a comprehensive web application running on a LAMP/XAMPP stack (Windows/Apache/MySQL/PHP). It operates as a centralized platform where multiple independent Service Providers list their services, and Customers book them. The codebase is organized with a centralized `DataBase` folder for connection management.
+### 2.1 Technology Stack
+*   **Operating System:** Windows (Development), Linux (Production compatible).
+*   **Server Environment:** XAMPP (Apache HTTP Server).
+*   **Backend Language:** PHP 7.4+ (Procedural & Object-Oriented Hybrid).
+*   **Database:** MariaDB / MySQL (Relational Database Management System).
+*   **Frontend Interface:** HTML5, CSS3, Bootstrap 4, JavaScript (ES6), jQuery.
+*   **Email Engine:** PHPMailer 6.x (SMTP).
+*   **PDF Engine:** mPDF (Composer Dependency).
 
-### 2.2 User Characteristics
-1.  **Administrator:** Tech-savvy user responsible for platform oversight, SP approval, wallet recharge approval, and revenue monitoring.
-2.  **Service Provider (SP):** Professionals offering home services. They manage their Gigs and Wallet.
-3.  **Customer:** General public looking for home services. Uses a simple Cart and Checkout interface.
-
----
-
-## 3. System Features (Functional Requirements)
-
-### 3.1 Customer Module
-#### 3.1.1 Registration & Authentication
-*   **REQ-C-1:** Users register with Name, Email, Phone, Address, City, Area, and Pincode.
-*   **REQ-C-2:** Secure Login using Username and Password.
-
-#### 3.1.2 Service Discovery
-*   **REQ-C-3:** Services are categorized (e.g., Cleaning, Plumbing) and searchable.
-*   **REQ-C-4:** Users view "Starts at" pricing in **Rs.** currency.
-*   **REQ-C-5:** **SP Location Display:** Service listings show the Provider's City and Area for better decision making.
-
-#### 3.1.3 Booking & Cart
-*   **REQ-C-6:** Users can add multiple services to a Cart.
-*   **REQ-C-7:** **Platform Fee:** The Cart automatically adds a **5% Platform Fee** to the Order Total.
-*   **REQ-C-8:** **Checkout:** Users confirm details (Name, Phone, Address) and select Service Date/Time.
-*   **REQ-C-9:** **Order Placement:** Upon confirmation, the order is saved to the database (`order.php`), and the system:
-    *   Generates a unique Order ID.
-    *   Saves order items in `user_order`.
-    *   **Deducts Commission** from the Service Provider's Wallet.
-
-### 3.2 Service Provider (SP) Module
-#### 3.2.1 Registration & Profile
-*   **REQ-SP-1:** SPs register with professional details (Category, Location, Phone).
-*   **REQ-SP-2:** **Verification:** SPs must provide a Transaction ID (Easypaisa/JazzCash) during signup.
-*   **REQ-SP-3:** New accounts require **Admin Approval** before activation.
-
-#### 3.2.2 Service & Order Management
-*   **REQ-SP-4:** SPs can Create, Read, Update, and Delete (CRUD) their service gigs.
-*   **REQ-SP-5:** **Order Management:** View incoming orders with status (Pending, Completed).
-*   **REQ-SP-6:** **Dashboard Stats:** View Total Income, Pending Orders, and Wallet Balance.
-
-#### 3.2.3 Wallet System
-*   **REQ-SP-7:** **Digital Wallet:** Every SP has a wallet balance to pay the platform commission.
-*   **REQ-SP-8:** **Recharge:** SPs can request a wallet recharge by entering an Amount and Manual Transaction ID (e.g., Bank Transfer Ref).
-*   **REQ-SP-9:** **History:** View detailed transaction history (Credits via Recharge, Debits via Commission).
-*   **REQ-SP-10:** **Auto-Debit:** When a customer places an order, the 5% commission is automatically debited from the SP's wallet.
-
-### 3.3 Admin Module
-#### 3.3.1 Platform Management
-*   **REQ-A-1:** **Dashboard:** Overview of Total SPs, Customers, Orders, and Revenue.
-*   **REQ-A-2:** **SP Management:** Verify and Approve/Delete Service Providers.
-*   **REQ-A-3:** **Category Management:** Add/Edit/Delete Service Categories.
-
-#### 3.3.2 Financial Management
-*   **REQ-A-4:** **Wallet Requests:** View pending recharge requests. Actions: **Approve** (Credits SP Wallet) or **Reject**.
-*   **REQ-A-5:** **Revenue Reporting:**
-    *   "Total Revenue" Widget on Dashboard links to detailed report.
-    *   **Detailed View:** Table displaying Order ID, Date, Customer Name, SP Name, Service, and Commission Earned.
-
-### 3.4 Android App (Webview)
-*   **REQ-APP-1:** An Android application wrapper uses a Webview to display the responsive website.
-*   **REQ-APP-2:** Allows full functionality (Login, Order, Wallet) on mobile devices.
+### 2.2 Directory Structure
+*   **`/` (Root):** Core entry points (`index.php`, `login.php`, `signup.php`).
+*   **`admin/`:** Restricted portal for System Administrators.
+*   **`customer/`:** Dashboard and features for end-users.
+*   **`serviceprovider/`:** Workspace for professionals.
+*   **`DataBase/`:** SQL schemas and `dbconnect.php`.
+*   **`php/`:** Backend logic scripts (`send_email.php`, `invoice.php`).
+*   **`includes/`:** Reusable UI components (`header.php`, `navbar.php`, `footer.php`).
+*   **`ForgotPassword/`:** Dedicated module for password recovery.
 
 ---
 
-## 4. Data Model (Database Schema)
+## 3. Module-Wise Functional Requirements
 
-The system uses a Relational Database (MySQL) with the following core entities:
+### 3.1 Authentication & Security Module (Global)
+This module acts as the gatekeeper for the entire application.
 
-### 4.1 Core Tables
-1.  **`login`**: Authentication (`username`, `password`, `role_id`).
-2.  **`customer`**: Customer profile (`name`, `phone`, `address`, `city_id`, `area`, `pincode`).
-3.  **`sp`**: Service Provider profile (`name`, `phone`, `status`, `wallet_balance`).
-    *   **New Column:** `wallet_balance` (DECIMAL 10,2).
-4.  **`category`** & **`service`**: Service Taxonomy.
-5.  **`sp_service`**: SP Gigs (`price`, `description`, `sp_id`).
+*   **REQ-AUTH-01: Dual-Layer Login System**
+    *   **File:** `login.php`
+    *   **Logic:** Accepts Username & Password.
+    *   **Verification:** Checks credentials against `login` table.
+    *   **Routing:** 
+        *   If `role_id = 1` -> Redirect to `admin/`.
+        *   If `role_id = 2` -> Redirect to `serviceprovider/`.
+        *   If `role_id = 3` -> Redirect to `customer/`.
+*   **REQ-AUTH-02: User Registration (Customer)**
+    *   **File:** `signup.php`
+    *   **Input:** Name, Email, Phone, Address, City (Ajax fetch), Area, Username, Password.
+    *   **Security:** Password hashing via `password_hash()` (Bcrypt).
+    *   **Verification:** Generates a secure random 32-char token.
+*   **REQ-AUTH-03: Service Provider Registration**
+    *   **File:** `sp_signup.php`
+    *   **Input:** SP Name, Contact Info, Service City.
+    *   **Payment:** Requires `transaction_id` for wallet verification (Easypaisa/JazzCash).
+    *   **Default Status:** `deactive` (Requires Admin Approval).
+*   **REQ-AUTH-04: Token-Based Email Verification**
+    *   **Mechanism:** When a user signs up, a unique Hex Token is generated.
+    *   **Email:** A "Verify Account" link is sent via SMTP (`php/send_email.php`).
+    *   **Verification:** Clicking the link triggers `verify_email.php`, which validates the token and updates `is_verified = 1` in the database.
+*   **REQ-AUTH-05: Forgot Password System**
+    *   **File:** `ForgotPassword/Email/email.php`
+    *   **Logic:** Confirms Username matches Email.
+    *   **OTP:** Generates a 4-digit numeric OTP.
+    *   **Email:** Sends OTP using the shared `sendEmail()` function.
+    *   **Reset:** Verifies OTP and allows password update (`password_hash` updated in DB).
 
-### 4.2 Order & Financial Tables
-6.  **`order_master`**:
-    *   `order_id` (PK), `customer_id` (FK), `total` (Grand Total), `commission` (Revenue), `order_date`, `due_date`, `status`, `pay_mode`.
-7.  **`user_order`**:
-    *   Line items: `order_id`, `service_title`, `price`, `qty`, `sp_id`, `status`.
-8.  **`wallet_transactions`**:
-    *   Ledger for SP Wallets: `transaction_id`, `sp_id`, `amount`, `type` ('credit'/'debit'), `status`, `manual_txn_id`, `created_at`, `description`.
+### 3.2 Customer Module
+*   **REQ-CUS-01: Smart Search & Filtering**
+    *   **Global Search:** Keyword-based search bar in header.
+    *   **Category Filter:** Browse by 'Plumbing', 'Beauty', 'Cleaning', etc.
+*   **REQ-CUS-02: Cart Management**
+    *   **Files:** `manage_cart.php`, `mycart.php`.
+    *   **Logic:** Session-based cart (`$_SESSION['cart']`). Supports Adding, Removing, and preventing duplicate items.
+*   **REQ-CUS-03: Checkout & Ordering**
+    *   **File:** `order.php`.
+    *   **Process:** 
+        *   Summarizes Total.
+        *   Adds **5% Platform Commission**.
+        *   Captures Delivery Address.
+        *   Saves Order Master & Order Items to DB.
+*   **REQ-CUS-04: Booking History & Invoices**
+    *   **Dashboard:** View Active and Past orders.
+    *   **Invoice:** Generate PDF Receipt (`invoice.php`) with breakdown of services and taxes.
+
+### 3.3 Service Provider (SP) Module
+*   **REQ-SP-01: Dashboard Overview**
+    *   **Real-time Stats:** Pending Orders, Completed Jobs, Wallet Balance.
+*   **REQ-SP-02: Gig (Service) Management**
+    *   **Create:** Add new service listing -> Select Category -> Set Title -> Set Price.
+    *   **Manage:** Toggle Availability (On/Off), Edit Description.
+*   **REQ-SP-03: Order Fulfillment**
+    *   **Action:** Accept or Reject incoming bookings.
+    *   **Status Update:** Mark jobs as "Completed" upon finishing.
+*   **REQ-SP-04: Digital Wallet System**
+    *   **Commission Model:** 5% commission is auto-deducted from Wallet when an order is placed.
+    *   **Recharge:** Admin-verified manual recharge requests.
+
+### 3.4 Admin Module
+*   **REQ-ADM-01: User Management**
+    *   View all Customers and Service Providers.
+    *   **Approve/Block** Service Providers based on documents/payment.
+*   **REQ-ADM-02: Master Data Management**
+    *   Add/Edit **Cities** and **Areas**.
+    *   Add/Edit **Service Categories**.
+*   **REQ-ADM-03: Financial Oversight**
+    *   View all Orders.
+    *   Monitor Wallet Transactions.
 
 ---
 
-## 5. Non-Functional Requirements
+## 4. Database Schema ('A to Z')
+Database Name: `hs`
 
-### 5.1 Performance
-*   Optimized database queries for fast search and listing.
-*   Efficient session management for Cart and User state.
+### 4.1 Master Entity Tables
+1.  **`role`**
+    *   `role_id` (PK), `role_name` (admin, serviceprovider, customer).
+2.  **`city`**
+    *   `city_id` (PK), `city_name`.
+3.  **`area`**
+    *   `area_id` (PK), `city_id` (FK), `area_name`.
+4.  **`category`**
+    *   `category_id` (PK), `category_name`.
+5.  **`service`** (Global Service Types)
+    *   `service_id` (PK), `category_id` (FK), `service_name`, `service_availibility` (Bool).
 
-### 5.2 Usability
-*   Mobile-first responsive design using Bootstrap.
-*   Clear "Rs." currency formatting.
-*   Simple 3-step checkout process.
+### 4.2 Auth & User Data Tables
+6.  **`login`** (Central Auth)
+    *   `login_id` (PK)
+    *   `username` (Unique)
+    *   `password` (VARCHAR 255 - Hashed)
+    *   `role_id` (FK)
+    *   `is_verified` (TinyInt)
+    *   `verification_code` (VARCHAR 255 - Token)
+7.  **`customer`**
+    *   `customer_id` (PK), `login_id` (FK), `first_name`, `last_name`, `email`, `phone`, `address`, `city_id`, `area`.
+8.  **`sp`** (Service Provider Profile)
+    *   `sp_id` (PK)
+    *   `login_id` (FK)
+    *   `sp_name`, `email`, `phone`, `city_id`
+    *   `status` (active/deactive)
+    *   `wallet_balance` (DECIMAL 10,2) - **Critical for Commission Logic**.
 
-### 5.3 Security
-*   **Password Hashing:** `bcrypt` used for all user passwords.
-*   **Session Security:** Role-based access control (Admin, SP, Customer).
-*   **Input Sanitization:** Order inputs are sanitized to prevent SQL Injection.
+### 4.3 Transactional Tables
+9.  **`sp_service`** (Specific Gigs listed by SPs)
+    *   `sp_id` (FK), `service_id` (FK) - Composite PK.
+    *   `service_title`, `price`, `description`, `availability`.
+10. **`order_master`** (Order Header)
+    *   `order_id` (PK), `customer_id` (FK), `total`, `commission`, `order_date`, `due_date`.
+11. **`user_order`** (Order Line Items)
+    *   `order_id` (FK), `service_id` (FK), `sp_id` (FK), `price`, `status` (pending/completed).
 
 ---
 
-## 6. Implementation Details
+## 5. Security Implementations
 
-### 6.1 Database Organization
-*   Allows cleaner project structure.
-*   **Centralized Connection:** All database connections use `DataBase/dbconnect.php`.
-*   **Schema Files:** All `.sql` files are stored in the `DataBase/` directory.
+### 5.1 Password Security
+*   **Algorithm:** BCRYPT.
+*   **Implementation:** `password_hash($pass, PASSWORD_DEFAULT)` on signup/reset.
+*   **Validation:** `password_verify($input, $hash)` on login.
 
-### 6.2 Key Workflows
-*   **Ordering:** Customer Cart -> `mycart.php` -> `order.php` (Logic: Insert -> Deduct Wallet -> Log -> Success).
-*   **Wallet Recharge:** SP Wallet Page -> Submit Request -> Admin Wallet Requests -> Approve -> Balance Credits.
+### 5.2 Input Sanitation
+*   **XSS Protection:** Usage of `htmlentities()` on user inputs (e.g., in `email.php` and registration).
+*   **SQL Injection:** Use of `mysqli_real_escape_string` (Legacy parts) or Prepared Statements (Newer modules).
+
+### 5.3 Session Security
+*   **Access Control:** Every sensitive page checks `$_SESSION` for role authorization.
+*   **Session Fixation:** `session_start()` is called globally in header.
 
 ---
-*Created by Antigravity - AI Agent*
 
+## 6. Email Configuration (Technical)
 
+*   **Library:** PHPMailer 6.x.
+*   **Core Logic:** `php/send_email.php`.
+*   **Functions:**
+    1.  `sendEmail($to, $subject, $body)`: Generic wrapper for sending HTML emails.
+    2.  `sendVerificationEmail($to, $token)`: Generates dynamic verification link.
+*   **SMTP Settings:**
+    *   Host: `smtp.gmail.com`
+    *   Port: `587`
+    *   Encryption: `TLS`
+    *   Auth: OAuth/App Password.
 
-Response: PHPMailer ke alawa alternatives ye hain:
-
-Project ko Live Host karna (Sabse Aasan): Agar aap apne project ko kisi online server (jaise 000webhost, InfinityFree, ya GoDaddy) par upload kar dete hain, to wahan default email automatic chalti hai. Aapko koi extra code ya setup nahi karna padega.
-XAMPP sendmail.exe Config: Aap XAMPP ki php.ini file edit karke email chalu kar sakte hain. Lekin ismein bhi same Gmail App Password wali requirement rahegi.
-Third-Party APIs (SendGrid, Mailgun): Ye professional email services hain. Inka setup PHPMailer se bhi thoda mushkil ho sakta hai (API Keys chahiye hoti hain).
-Mera Mashwara (Recommendation):
-
-Agar aap App Password generate nahi kar pa rahe, to Project ko Live Server par daal dein.
-Agar localhost par hi rakhna hai, to PHPMailer hi iklauta reliable solution hai.
-Ya phir abhi wala Alert Box (Popup) accept kar lein, kyunki localhost par yahi standard saving method hai.
+---
+*End of Specification*

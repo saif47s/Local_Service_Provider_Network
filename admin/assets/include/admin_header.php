@@ -56,9 +56,8 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
     <!--JsGrid CSS-->
     <link rel="stylesheet" href="assets/css/jsgrid.min.css">
     <link rel="stylesheet" href="assets/css/jsgrid-theme.min.css">
-    <!-- jquery cdn link for ajax -->
-    <script src="https://code.jquery.com/jquery-3.6.3.js"
-        integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+    <!-- jquery cdn link for ajax removed to prevent double loading/conflicts with footer jquery -->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.3.js" ...></script> -->
 
 
 
@@ -119,6 +118,93 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
 
                     <!--Search box and avatar-->
                     <div class="col-sm-8 col-4 text-right flex-header-menu justify-content-end">
+
+                        <!-- Notifications -->
+                        <?php
+                        // 1. Pending Service Providers
+                        $sql_sp = "SELECT COUNT(*) as count FROM sp WHERE status = 'deactive'";
+                        $res_sp = mysqli_query($conn, $sql_sp);
+                        $row_sp = mysqli_fetch_assoc($res_sp);
+                        $count_sp = $row_sp['count'];
+
+                        // 2. Pending Wallet Requests
+                        $sql_wallet = "SELECT COUNT(*) as count FROM wallet_transactions WHERE status = 'pending'";
+                        $res_wallet = mysqli_query($conn, $sql_wallet);
+                        $row_wallet = mysqli_fetch_assoc($res_wallet);
+                        $count_wallet = $row_wallet['count'];
+
+                        // 3. Activation Requests (Split)
+                        // SP Requests (Role ID 2)
+                        $sql_req_sp = "SELECT COUNT(*) as count FROM login WHERE activation_request = 1 AND role_id = 2";
+                        $res_req_sp = mysqli_query($conn, $sql_req_sp);
+                        $row_req_sp = mysqli_fetch_assoc($res_req_sp);
+                        $count_req_sp = $row_req_sp['count'];
+
+                        // Customer Requests (Role ID 3)
+                        $sql_req_cust = "SELECT COUNT(*) as count FROM login WHERE activation_request = 1 AND role_id = 3";
+                        $res_req_cust = mysqli_query($conn, $sql_req_cust);
+                        $row_req_cust = mysqli_fetch_assoc($res_req_cust);
+                        $count_req_cust = $row_req_cust['count'];
+
+                        $total_notif = $count_sp + $count_wallet + $count_req_sp + $count_req_cust;
+                        ?>
+
+                        <div class="mr-4 position-relative">
+                            <a class="" href="#" role="button" id="notifDropdown" data-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-bell text-secondary" style="font-size: 1.4rem;"></i>
+                                <?php if ($total_notif > 0): ?>
+                                    <span class="badge badge-danger rounded-circle"
+                                        style="position: absolute; top: -5px; right: -5px; font-size: 0.6rem; padding: 4px 6px;"><?php echo $total_notif; ?></span>
+                                <?php endif; ?>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right mt-13 shadow border-0"
+                                aria-labelledby="notifDropdown" style="min-width: 280px;">
+                                <h6 class="dropdown-header text-uppercase font-weight-bold">Notifications</h6>
+                                <div class="dropdown-divider"></div>
+
+                                <a class="dropdown-item d-flex justify-content-between align-items-center py-2"
+                                    href="sp_view.php">
+                                    <span><i class="fa fa-user-plus mr-2 text-primary"></i> New SP Approvals</span>
+                                    <?php if ($count_sp > 0) {
+                                        echo '<span class="badge badge-primary badge-pill">' . $count_sp . '</span>';
+                                    } ?>
+                                </a>
+
+                                <a class="dropdown-item d-flex justify-content-between align-items-center py-2"
+                                    href="wallet_requests.php">
+                                    <span><i class="fa fa-wallet mr-2 text-info"></i> Wallet Requests</span>
+                                    <?php if ($count_wallet > 0) {
+                                        echo '<span class="badge badge-info badge-pill">' . $count_wallet . '</span>';
+                                    } ?>
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header text-muted small">Activation Requests</h6>
+
+                                <a class="dropdown-item d-flex justify-content-between align-items-center py-2"
+                                    href="sp_trash.php">
+                                    <span><i class="fa fa-user-md mr-2 text-warning"></i> Service Provider</span>
+                                    <?php if ($count_req_sp > 0) {
+                                        echo '<span class="badge badge-warning badge-pill">' . $count_req_sp . '</span>';
+                                    } ?>
+                                </a>
+
+                                <a class="dropdown-item d-flex justify-content-between align-items-center py-2"
+                                    href="customer_trash.php">
+                                    <span><i class="fa fa-users mr-2 text-warning"></i> Customer</span>
+                                    <?php if ($count_req_cust > 0) {
+                                        echo '<span class="badge badge-warning badge-pill">' . $count_req_cust . '</span>';
+                                    } ?>
+                                </a>
+
+                                <?php if ($total_notif == 0): ?>
+                                    <div class="dropdown-item text-muted text-center small py-3">No new notifications</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+
                         <!-- <div class="search-rounded mr-3">
                             <input type="text" class="form-control search-box" placeholder="Enter keywords.." />
                         </div> -->

@@ -15,6 +15,10 @@ include 'assets/include/admin_header.php';
             <h5 class="mb-0"><strong>Service Provider</strong></h5>
             <span class="text-secondary">Dashboard <i class="fa fa-angle-right"></i> View Service Provider
                 Details</span>
+            <div class="mt-2">
+                <a href="sp_trash.php" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Deleted Service
+                    Providers (Trash)</a>
+            </div>
         </div>
         <div class="col-md-auto col-lg-7">
 
@@ -75,9 +79,11 @@ include 'assets/include/admin_header.php';
                         </thead>
                         <tbody>
                             <?php // SERVICE PROVIDER VIEW CODE. Data get from SP & CITY table using inner joinn becase we need "city name" from city table.
-                            $sql = "SELECT `sp`.* , `city`.*
-                            FROM `sp` INNER JOIN `city` 
-                            ON `sp`.city_id=`city`.city_id";
+                            $sql = "SELECT `sp`.* , `city`.*, `login`.`account_status`
+                            FROM `sp` 
+                            INNER JOIN `city` ON `sp`.city_id=`city`.city_id
+                            INNER JOIN `login` ON `sp`.login_id=`login`.login_id
+                            WHERE `login`.account_status != 'deleted'";
                             $result = mysqli_query($conn, $sql);
                             if ($result) {
                                 $sno = 0;
@@ -197,32 +203,7 @@ include 'assets/include/admin_header.php';
 
 
     <!-- Page JavaScript Files-->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/jquery-1.12.4.min.js"></script>
-    <!--Popper JS-->
-    <script src="assets/js/popper.min.js"></script>
-    <!--Bootstrap-->
-    <script src="assets/js/bootstrap.min.js"></script>
-    <!--Sweet alert JS-->
-    <script src="assets/js/sweetalert.js"></script>
-    <!--Progressbar JS-->
-    <script src="assets/js/progressbar.min.js"></script>
-    <!--Charts-->
-    <!--Canvas JS-->
-    <script src="assets/js/charts/canvas.min.js"></script>
-    <!--Bootstrap Calendar JS-->
-    <script src="assets/js/calendar/bootstrap_calendar.js"></script>
-    <script src="assets/js/calendar/demo.js"></script>
-    <!--Bootstrap Calendar-->
-    <!--Datatable-->
-    <script src="assets/js/jquery.dataTables.min.js"></script>
-    <script src="assets/js/dataTables.bootstrap4.min.js"></script>
-    <!--JsGrid table-->
-    <script src="assets/js/jsgrid.min.js"></script>
-    <script src="assets/js/jsgrid-demo.php"></script>
-
-    <!--Custom Js Script-->
-    <script src="assets/js/custom.js"></script>
+    <!-- Scripts are included in admin_footer.php -->
     <!--Custom Js Script-->
 
     <script>

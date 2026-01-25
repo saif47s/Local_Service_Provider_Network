@@ -78,44 +78,46 @@ $current_balance = $balance_row['wallet_balance'];
                     <strong>Transaction History</strong>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Transaction ID</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $hist_sql = "SELECT * FROM wallet_transactions WHERE sp_id = $sp_id ORDER BY created_at DESC";
-                            $hist_res = mysqli_query($conn, $hist_sql);
-                            if (mysqli_num_rows($hist_res) > 0) {
-                                while ($row = mysqli_fetch_assoc($hist_res)) {
-                                    $status_badge = '';
-                                    if ($row['status'] == 'approved')
-                                        $status_badge = '<span class="badge badge-success">Approved</span>';
-                                    elseif ($row['status'] == 'pending')
-                                        $status_badge = '<span class="badge badge-warning">Pending</span>';
-                                    else
-                                        $status_badge = '<span class="badge badge-danger">Rejected</span>';
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transaction ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $hist_sql = "SELECT * FROM wallet_transactions WHERE sp_id = $sp_id ORDER BY created_at DESC";
+                                $hist_res = mysqli_query($conn, $hist_sql);
+                                if (mysqli_num_rows($hist_res) > 0) {
+                                    while ($row = mysqli_fetch_assoc($hist_res)) {
+                                        $status_badge = '';
+                                        if ($row['status'] == 'approved')
+                                            $status_badge = '<span class="badge badge-success">Approved</span>';
+                                        elseif ($row['status'] == 'pending')
+                                            $status_badge = '<span class="badge badge-warning">Pending</span>';
+                                        else
+                                            $status_badge = '<span class="badge badge-danger">Rejected</span>';
 
-                                    echo "<tr>
-                                            <td>{$row['created_at']}</td>
-                                            <td>{$row['manual_txn_id']}</td>
-                                            <td>" . ucfirst($row['type']) . "</td>
-                                            <td>Rs. {$row['amount']}</td>
-                                            <td>{$status_badge}</td>
-                                          </tr>";
+                                        echo "<tr>
+                                                <td>{$row['created_at']}</td>
+                                                <td>{$row['manual_txn_id']}</td>
+                                                <td>" . ucfirst($row['type']) . "</td>
+                                                <td>Rs. {$row['amount']}</td>
+                                                <td>{$status_badge}</td>
+                                            </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='text-center'>No transactions found.</td></tr>";
                                 }
-                            } else {
-                                echo "<tr><td colspan='5' class='text-center'>No transactions found.</td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

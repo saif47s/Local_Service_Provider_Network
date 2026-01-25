@@ -7,7 +7,7 @@ if (!defined('MYSITE')) {
 
 
 <!-- ===Navbar start=== -->
-<nav class="container-fluid bg-c1-1" style="height:250px;">
+<nav class="container-fluid bg-c1-1" style="height:auto;">
 
     <!-- <p class="text-center text-light">Copyright Group No:-18</p> -->
     <!-- Footer -->
@@ -23,7 +23,8 @@ if (!defined('MYSITE')) {
                 <div class="col-md-6 mt-md-0 mt-3">
 
                     <!-- Content -->
-                    <a class="navbar-brand" href=""> <img src="../img/mainlogo.png" style="width:170px;" alt="Logo"> </a>
+                    <a class="navbar-brand" href=""> <img src="../img/mainlogo.png" style="width:170px;" alt="Logo">
+                    </a>
 
                     <!-- <h5 class="text-uppercase text-light">Footer Content</h5> -->
                     <!-- <p class="text-light">Here you can use rows and columns to organize your footer content.</p> -->
@@ -94,4 +95,5 @@ if (!defined('MYSITE')) {
     </footer>
     <!-- Footer -->
 </nav>
+
 <!-- ===Navbar End=== -->

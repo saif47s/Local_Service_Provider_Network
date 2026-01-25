@@ -41,9 +41,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             if ($password == $cpassword) {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $otp = rand(100000, 999999);
-                // insert into LOGIN TABLE including OTP
-                $sql = "INSERT INTO `login` (`login_id` , `role_id`, `username`,`password`, `is_verified`, `verification_code`) VALUES ('', '3', '$username', '$hash', '0', '$otp')";
+                $token = bin2hex(random_bytes(16)); // Generate 32-character secure token
+
+                // insert into LOGIN TABLE including Token
+                $sql = "INSERT INTO `login` (`login_id` , `role_id`, `username`,`password`, `is_verified`, `verification_code`) VALUES ('', '3', '$username', '$hash', '0', '$token')";
                 $result = mysqli_query($conn, $sql);
 
                 if ($result) {
@@ -61,22 +62,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $sql2 = "INSERT INTO `customer` (`customer_id`, `login_id`, `first_name`, `last_name`, `email`, `phone`, `address`, `city_id`, `area`, `pincode`) VALUES ('', '$login_id', '$first_name', '$last_name','$email','$phone', '$address', '$city_id', '$area', '$pincode')";
                     $result2 = mysqli_query($conn, $sql2);
                     if ($result2) {
-                        // Send OTP
-                        include_once 'php/send_otp.php';
-                        if (sendOTP($email, $otp)) {
-                            $_SESSION['temp_login_id'] = $login_id;
-                            $_SESSION['temp_email'] = $email;
+                        // Send Verification Email
+                        include_once 'php/send_email.php';
+                        if (sendVerificationEmail($email, $token)) {
                             echo "<script>
-                            alert('Account Created! Please verify your Email.');
-                            window.location.href = 'verify_otp.php';
+                            alert('Account Created! Please check your email ($email) to verify your account.');
+                            window.location.href = 'login.php';
                         </script>";
-                            exit; // Stop script
+                            exit;
                         } else {
-                            $_SESSION['temp_login_id'] = $login_id;
-                            $_SESSION['temp_email'] = $email;
+                            // Check if this is localhost dev
+                            $verifyLink = "http://localhost/BCA-home-Services-Project-master/BCA-home-Services-Project-master/verify_email.php?token=" . urlencode($token);
                             echo "<script>
-                                alert('Email Sending Failed (Localhost). Testing OTP: $otp');
-                                window.location.href = 'verify_otp.php';
+                                alert('Email Sending Failed (Localhost). Manual Link: $verifyLink');
+                                window.location.href = 'login.php';
                             </script>";
                             exit;
                         }

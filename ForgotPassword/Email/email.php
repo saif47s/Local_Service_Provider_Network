@@ -1,12 +1,12 @@
 <?php
 include '../../db/dbconnect.php';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require './PHPMailer/src/Exception.php';
-require './PHPMailer/src/PHPMailer.php';
-require './PHPMailer/src/SMTP.php';
+// PHPMailer is handled by send_email.php now
+// use PHPMailer\PHPMailer\PHPMailer;
+// use PHPMailer\PHPMailer\Exception;
+// require './PHPMailer/src/Exception.php';
+// require './PHPMailer/src/PHPMailer.php';
+// require './PHPMailer/src/SMTP.php';
 
 
 session_start();
@@ -50,23 +50,13 @@ if (isset($_POST['sendotp'])) {
                 if ($name == $fusername && $email == $femail) {
 
                     $otp = rand(1111, 9999);
-
                     $message = "Hey $name! Here is your One Time Password : <b>$otp</b> valid for 5 minutes. ";
 
-                    $mail = new PHPMailer(true);
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'muhammadsaif1693@gmail.com';
-                    $mail->Password = 'vdrpdupnmnggdwkc';
-                    $mail->Port = 465;
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->isHTML(true);
-                    $mail->setFrom($email, $name);
-                    $mail->addAddress($email);
-                    $mail->Subject = ($subject);
-                    $mail->Body = $message;
-                    $mail->send();
+
+                    // Use shared mailing function
+                    require_once __DIR__ . '/../../php/send_email.php';
+                    sendEmail($email, $subject, $message);
+
 
                     setcookie("otp", $otp, time() + 300);
                     setcookie("mname", $name, time() + 300);
@@ -83,7 +73,6 @@ if (isset($_POST['sendotp'])) {
             }
         }
 
-
         //service provider forgot password functionality
         if ($role_id == 2) {
             //now we will find email from customer table with the help of login_id
@@ -97,27 +86,16 @@ if (isset($_POST['sendotp'])) {
                 // $fusername = $fetch['M_USERNAME'];
                 $femail = $fetch['email'];
 
-
                 if ($name == $fusername && $email == $femail) {
 
                     $otp = rand(1111, 9999);
-
                     $message = "Hey $name! Here is your One Time Password : <b>$otp</b> valid for 5 minutes. ";
 
-                    $mail = new PHPMailer(true);
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'muhammadsaif1693@gmail.com';
-                    $mail->Password = 'vdrpdupnmnggdwkc';
-                    $mail->Port = 465;
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->isHTML(true);
-                    $mail->setFrom($email, $name);
-                    $mail->addAddress($email);
-                    $mail->Subject = ($subject);
-                    $mail->Body = $message;
-                    $mail->send();
+
+                    // Use shared mailing function
+                    require_once __DIR__ . '/../../php/send_email.php';
+                    sendEmail($email, $subject, $message);
+
 
                     setcookie("otp", $otp, time() + 300);
                     setcookie("mname", $name, time() + 300);

@@ -293,4 +293,5 @@ tr:hover .cut { opacity: 1; }
 $mpdf = new \Mpdf\Mpdf();
 $mpdf->WriteHTML($html);
 $file = time() . '.pdf';
-$mpdf->output($file, 'I');
+ob_end_clean(); // Clean any previous output (whitespace, etc)
+$mpdf->output($file, 'D');

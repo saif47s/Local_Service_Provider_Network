@@ -5,8 +5,8 @@ session_start();
 if (isset($_GET['id'])) {
     $login_id = $_GET['id'];
 
-    // Restore: Update status to 'active'
-    $sql = "UPDATE `login` SET `account_status` = 'active' WHERE `login_id` = '$login_id'";
+    // Restore: Update status to 'active' AND reset request flag
+    $sql = "UPDATE `login` SET `account_status` = 'active', `activation_request` = 0 WHERE `login_id` = '$login_id'";
     $result = mysqli_query($conn, $sql);
 
     if ($result) {

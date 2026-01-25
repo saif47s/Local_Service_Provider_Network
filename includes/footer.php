@@ -25,17 +25,26 @@ if (!defined('MYSITE')) {
     -->
 <!-- Bottom Navigation Bar for Mobile -->
 <style>
+    /* Body padding to prevent content from being hidden behind bottom nav on mobile */
+    @media (max-width: 767.98px) {
+        body {
+            padding-bottom: 70px;
+        }
+    }
+
     .bottom-nav {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100vw;
         max-width: 100%;
-        background-color: #fff;
+        background-color: #0A2647;
+        /* Theme Color Dark Blue */
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
         display: flex;
         justify-content: space-around;
-        padding: 5px 0;
+        padding: 10px 0;
+        /* Increased padding slightly */
         z-index: 9999;
         flex-direction: row !important;
         align-items: center !important;
@@ -49,14 +58,21 @@ if (!defined('MYSITE')) {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        color: #6c757d;
+        color: #b0b0b0;
+        /* Light Gray for unselected */
         font-size: 12px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .nav-item-link:hover {
+        color: #fff;
         text-decoration: none;
     }
 
     .nav-item-link.active {
-        color: #0A2647;
-        /* Theme Color */
+        color: #ffffff;
+        /* White for active */
         font-weight: bold;
     }
 
@@ -72,26 +88,38 @@ if (!defined('MYSITE')) {
     }
 </style>
 
+<?php
+// Determine base path based on script URL to avoid OS separator issues
+// Determine base path based on script URL to avoid OS separator issues
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
+if (strpos($script_name, '/customer/') !== false || strpos($script_name, '/admin/') !== false || strpos($script_name, '/serviceprovider/') !== false) {
+    $base_path = '../';
+} else {
+    $base_path = '';
+}
+
+?>
+
 <div class="bottom-nav d-flex d-md-none">
-    <a href="index.php" class="nav-item-link">
+    <a href="<?php echo $base_path; ?>index.php" class="nav-item-link">
         <i class="fas fa-home"></i>
         Home
     </a>
-    <a href="mycart.php" class="nav-item-link">
+    <a href="<?php echo $base_path; ?>customer/mycart.php" class="nav-item-link">
         <i class="fas fa-shopping-cart"></i>
         Cart
     </a>
-    <a href="customer/order.php" class="nav-item-link">
+    <a href="<?php echo $base_path; ?>customer/order_details.php" class="nav-item-link">
         <i class="fas fa-clipboard-list"></i>
         Orders
     </a>
     <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) { ?>
-        <a href="customer/customer_profile.php" class="nav-item-link">
+        <a href="<?php echo $base_path; ?>customer/customer_profile.php" class="nav-item-link">
             <i class="fas fa-user"></i>
             Profile
         </a>
     <?php } else { ?>
-        <a href="login.php" class="nav-item-link">
+        <a href="<?php echo $base_path; ?>login.php" class="nav-item-link">
             <i class="fas fa-sign-in-alt"></i>
             Login
         </a>
@@ -131,7 +159,8 @@ if (!defined('MYSITE')) {
                 deferredPrompt = null;
             });
         });
-    });
+
+});
 </script>
 </body>
 

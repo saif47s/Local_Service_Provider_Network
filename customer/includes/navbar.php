@@ -49,7 +49,10 @@ if (!defined('MYSITE')) {
 <nav class="navbar navbar-expand-lg navbar-dark bg-c1-1 sticky-top">
 
     <a class="navbar-brand" href="customer_index.php">
-        <h3 class="text-white" style="font-weight: bold; margin-bottom: 0;">Hyper Local Service Provider</h3>
+        <h3 class="text-white d-none d-md-block" style="font-weight: bold; margin-bottom: 0;">Hyper Local Service
+            Provider</h3>
+        <span class="text-white d-block d-md-none" style="font-weight: bold; font-size: 18px; margin-bottom: 0;">Hyper
+            Local Services</span>
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">

@@ -217,8 +217,11 @@
                             </a>
                             <br>
                             <a href="ForgotPassword/forgotpassword.php">
-                                <!-- <small class="text-theme"><strong>Forgot password?</strong></small> -->
                                 <small class="text-theme"><strong>Forgot password?</strong></small>
+                            </a>
+                            <br>
+                            <a href="active_account_request.php">
+                                <small class="text-theme"><strong>Active Account</strong></small>
                             </a>
                         </div>
                     </form>

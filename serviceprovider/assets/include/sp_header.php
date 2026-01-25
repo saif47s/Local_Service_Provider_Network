@@ -89,7 +89,7 @@ if (!isset($_SESSION['sp_loggedin']) || $_SESSION['sp_loggedin'] != true) {
         <div class="row header shadow-sm">
 
             <!--Logo-->
-            <div class="col-sm-3 pl-0 text-center header-logo">
+            <div class="col-sm-3 col-12 pl-0 text-center header-logo">
                 <div class="bg-theme mr-3 pt-3 pb-2 mb-0" style="">
                     <h3 class="logo"><a href="index.php" class="text-secondary logo"><i class="fa fa-institution"></i>
                             <span class="small"> <b>Hyper Local Service Provider </b> workspace</span></a></h3>

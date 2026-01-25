@@ -15,7 +15,7 @@ if (!defined('MYSITE')) {
         overflow: hidden;
     }
 
-    .fa-shopping-cart {
+    .cart .fa-shopping-cart {
         position: relative;
         top: 4px;
         z-index: 1;
@@ -42,10 +42,22 @@ if (!defined('MYSITE')) {
     }
 </style>
 
+<?php
+// Determine base path based on script URL to avoid OS separator issues
+// Determine base path based on script URL to avoid OS separator issues
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
+if (strpos($script_name, '/customer/') !== false || strpos($script_name, '/admin/') !== false || strpos($script_name, '/serviceprovider/') !== false) {
+    $base_path = '../';
+} else {
+    $base_path = '';
+}
+
+?>
+
 <!-- ===Navbar start=== -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-c1-1 sticky-top">
 
-    <a class="navbar-brand" href="index.php">
+    <a class="navbar-brand" href="<?php echo $base_path; ?>index.php">
         <h3 class="text-white d-none d-md-block" style="font-weight: bold; margin-bottom: 0;">Hyper Local Service
             Provider</h3>
         <h3 class="text-white d-block d-md-none" style="font-weight: bold; margin-bottom: 0;">Hyper Local Service</h3>
@@ -58,7 +70,8 @@ if (!defined('MYSITE')) {
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="index.php">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="<?php echo $base_path; ?>index.php">Home <span
+                        class="sr-only">(current)</span></a>
             </li>
 
             <li class="nav-item">
@@ -79,7 +92,7 @@ if (!defined('MYSITE')) {
                             $sno = $sno + 1;
                             $category_id = $row['category_id'];
                             $category_name = $row['category_name'];
-                            echo '<a class="dropdown-item" href="serviceshow.php?category_id=' . $category_id . '">' . $category_name . '</a>';
+                            echo '<a class="dropdown-item" href="' . $base_path . 'serviceshow.php?category_id=' . $category_id . '">' . $category_name . '</a>';
                         }
                     } else {
                         echo 'note inserted';
@@ -104,11 +117,14 @@ if (!defined('MYSITE')) {
             </li> -->
         </ul>
         <form class="form-inline my-2 my-lg-0">
-            <a href="sp_signup.php" target="_blank"><button type="button" class="btn btn-outline-light mr-2">Register As
+            <a href="<?php echo $base_path; ?>sp_signup.php" target="_blank"><button type="button"
+                    class="btn btn-outline-light mr-2">Register As
                     a Service Provider</button></a>
 
-            <a href="login.php" target=""><button type="button" class="btn btn-outline-light mr-2">Login</button></a>
-            <a href="signup.php" target=""><button type="button" class="btn btn-outline-light mr-2">Sign Up</button></a>
+            <a href="<?php echo $base_path; ?>login.php" target=""><button type="button"
+                    class="btn btn-outline-light mr-2">Login</button></a>
+            <a href="<?php echo $base_path; ?>signup.php" target=""><button type="button"
+                    class="btn btn-outline-light mr-2">Sign Up</button></a>
             <!-- <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
             <button class="btn btn-c1-2 my-2 my-sm-0 mr-3" type="submit">Search</button> -->
 
@@ -120,7 +136,8 @@ if (!defined('MYSITE')) {
                 }
                 ?>
 
-                <a href="../hs/mycart.php"><img src="img/shopping-cart-icon.png" style="width:50px;" alt=""></a>
+                <a href="<?php echo $base_path; ?>customer/mycart.php"><img
+                        src="<?php echo $base_path; ?>img/shopping-cart-icon.png" style="width:50px;" alt=""></a>
                 <!-- <a href="../hs/mycart.php"><i class="fas fa-2x fa-shopping-cart mr-2" style="color:white;"></i></a> -->
             </div>
 
