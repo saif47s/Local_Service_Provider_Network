@@ -101,7 +101,16 @@ if (strpos($script_name, '/customer/') !== false || strpos($script_name, '/admin
 ?>
 
 <div class="bottom-nav d-flex d-md-none">
-    <a href="<?php echo $base_path; ?>index.php" class="nav-item-link">
+    <?php
+    $home_url = $base_path . "index.php";
+    // If logged in as customer, redirect Home to Customer Dashboard
+    if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) {
+        $home_url = $base_path . "customer/customer_index.php";
+    }
+    // Optional: Add Admin check if needed, but 'loggedin' usually refers to customer in this codebase context or check specific session vars.
+    // However, simplest fix for the reported issue:
+    ?>
+    <a href="<?php echo $home_url; ?>" class="nav-item-link">
         <i class="fas fa-home"></i>
         Home
     </a>
@@ -160,7 +169,7 @@ if (strpos($script_name, '/customer/') !== false || strpos($script_name, '/admin
             });
         });
 
-});
+    });
 </script>
 </body>
 

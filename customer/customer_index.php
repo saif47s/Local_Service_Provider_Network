@@ -1,6 +1,6 @@
 <?php
 define('MYSITE', true);
-include '../db/dbconnect.php';
+include '../DataBase/dbconnect.php';
 
 $title = 'Main';
 $css_directory = '../css/main.min.css';
@@ -46,15 +46,16 @@ include 'includes/navbar.php';
                     $category_id = $row['category_id'];
                     $category_name = $row['category_name'];
                     echo '
-                    <a href="serviceshow.php?category_id=' . $category_id . '" class="text-reset">
-                            <div class="card card-deck h-100">
+                    <div class="col mb-4">
+                        <a href="serviceshow.php?category_id=' . $category_id . '" class="text-reset text-decoration-none">
+                            <div class="card h-100 shadow-sm">
                                  <img src="../img/' . $category_id . '.jpg" class="card-img-top" style="width:100%; height:200px; object-fit:cover;" alt="..."> 
                                  <div class="card-body text-center">
-                                        <h5 class="card-title">' . $category_name . '</h5>
-                                    </div>
-                                    </div>
-                                    </div>
-                                    </a>
+                                        <h5 class="card-title font-weight-bold" style="color:#0A2647;">' . $category_name . '</h5>
+                                 </div>
+                            </div>
+                        </a>
+                    </div>
                                     ';
                 }
             } else {

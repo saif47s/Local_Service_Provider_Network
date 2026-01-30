@@ -223,6 +223,10 @@
                             <a href="active_account_request.php">
                                 <small class="text-theme"><strong>Active Account</strong></small>
                             </a>
+                            <br>
+                            <a href="admin_reset_password.php">
+                                <small class="text-theme"><strong>Admin Password Reset</strong></small>
+                            </a>
                         </div>
                     </form>
                 </div>

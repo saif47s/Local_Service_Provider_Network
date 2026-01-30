@@ -146,7 +146,17 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
                         $row_req_cust = mysqli_fetch_assoc($res_req_cust);
                         $count_req_cust = $row_req_cust['count'];
 
-                        $total_notif = $count_sp + $count_wallet + $count_req_sp + $count_req_cust;
+                        // 4. New Customer Reviews
+                        $count_rev = 0;
+                        $sql_rev = "SELECT COUNT(*) as count FROM customer_reviews WHERE is_read = 0";
+                        // Suppress error if table doesn't exist to prevent crash
+                        $res_rev = @mysqli_query($conn, $sql_rev);
+                        if ($res_rev) {
+                            $row_rev = mysqli_fetch_assoc($res_rev);
+                            $count_rev = $row_rev['count'];
+                        }
+
+                        $total_notif = $count_sp + $count_wallet + $count_req_sp + $count_req_cust + $count_rev;
                         ?>
 
                         <div class="mr-4 position-relative">
@@ -198,6 +208,16 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
                                     } ?>
                                 </a>
 
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header text-muted small">Reviews</h6>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center py-2"
+                                    href="customer_reviews.php">
+                                    <span><i class="fa fa-star mr-2 text-success"></i> Customer Reviews</span>
+                                    <?php if ($count_rev > 0) {
+                                        echo '<span class="badge badge-success badge-pill">' . $count_rev . '</span>';
+                                    } ?>
+                                </a>
+
                                 <?php if ($total_notif == 0): ?>
                                     <div class="dropdown-item text-muted text-center small py-3">No new notifications</div>
                                 <?php endif; ?>
@@ -223,6 +243,9 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="_generate_report.php"><i class="fa fa-book pr-2"></i>
                                     Report</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="admin_profile.php"><i class="fa fa-user pr-2"></i>
+                                    My Profile</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="logout.php"><i class="fa fa-power-off pr-2"></i>
                                     Logout</a>

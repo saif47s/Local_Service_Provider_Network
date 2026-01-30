@@ -1,8 +1,8 @@
 <?php
 define('MYSITE', true);
-include '../db/dbconnect.php';
+include '../DataBase/dbconnect.php';
 
-$title = 'Main';
+$title = 'Services';
 $css_directory = '../css/main.min.css';
 $css_directory2 = '../css/main.min.css.map';
 include 'includes/header.php';
@@ -43,17 +43,17 @@ include 'includes/navbar.php';
         $category_id = $_GET['category_id'];
         $sql = "SELECT * FROM `category` WHERE category_id = $category_id";
         $result = mysqli_query($conn, $sql);
-        if ($result) {
+        if ($result && mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
                 $category_id = $row['category_id'];
                 $category_name = $row['category_name'];
             }
+        } else {
+            echo "<script>window.location.href='customer_index.php';</script>";
         }
     } else {
         // if anyone directly enter url then else part run
-        echo "<script>
-        window.location.href='customer_index.php';
-        </script>";
+        echo "<script>window.location.href='customer_index.php';</script>";
     }
     ?>
 
@@ -61,167 +61,220 @@ include 'includes/navbar.php';
     <div class="jumbotron jumbotron-fluid bg-c1-4 mb-0">
         <div class="container">
             <h1 class="display-4"><b><?php echo $category_name ?></b></h1>
-            <!-- <p class="lead">This is a modified jumbotron that occupies the entire horizontal space of its parent.</p> -->
         </div>
     </div>
-    <div class="bg-white sticky-top">
-        <div class="container mb-3 py-4">
 
+    <div class="bg-white sticky-top shadow-sm">
+        <div class="container mb-3 py-3">
 
-            <?php
-            //fetch service name
-            $sql = "SELECT * FROM `service` WHERE category_id = $category_id";
-            $result = mysqli_query($conn, $sql);
-            $numexist = mysqli_num_rows($result);
-            if ($numexist > 0) {
-                if ($result) {
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        $service_id = $row['service_id'];
-                        $service_name = $row['service_name'];
-                        // <a href="serviceshow.php?service_id=' . $service_id . '&service_name=' . $service_name . '"><button type="button" class="btn btn-outline-c1-1">' . $service_name . '</button></a>
+            <!-- Filter Section -->
+            <form method="GET" action="serviceshow.php" class="form-inline mb-3 justify-content-center">
+                <input type="hidden" name="category_id" value="<?php echo $category_id; ?>">
+
+                <div class="form-group mr-2">
+                    <select name="city_id" id="city_id" class="form-control" onchange="fetchAreas(this.value)">
+                        <option value="">All Cities</option>
+                        <?php
+                        $city_sql = "SELECT * FROM city";
+                        $city_res = mysqli_query($conn, $city_sql);
+                        while ($c_row = mysqli_fetch_assoc($city_res)) {
+                            $selected = (isset($_GET['city_id']) && $_GET['city_id'] == $c_row['city_id']) ? 'selected' : '';
+                            echo "<option value='" . $c_row['city_id'] . "' $selected>" . $c_row['city_name'] . "</option>";
+                        }
                         ?>
-                        <a href="serviceshow.php?serviceid=<?php echo $service_id ?>"><button type="button"
-                                class="btn btn-outline-c1-1"><?php echo $service_name ?></button></a>
+                    </select>
+                </div>
+
+                <div class="form-group mr-2 position-relative">
+                    <input type="text" name="area_name" id="area_input" list="area_list" class="form-control"
+                        placeholder="Type Area..." autocomplete="off"
+                        value="<?php echo isset($_GET['area_name']) ? htmlspecialchars($_GET['area_name']) : ''; ?>">
+                    <datalist id="area_list">
+                        <!-- Filled via AJAX -->
+                    </datalist>
+                </div>
+
+                <div class="form-group mr-2">
+                    <select name="sort" class="form-control">
+                        <option value="">Sort By</option>
+                        <option value="price_asc" <?php if (isset($_GET['sort']) && $_GET['sort'] == 'price_asc')
+                            echo 'selected'; ?>>Price: Low to High</option>
+                        <option value="price_desc" <?php if (isset($_GET['sort']) && $_GET['sort'] == 'price_desc')
+                            echo 'selected'; ?>>Price: High to Low</option>
+                        <option value="rating" <?php if (isset($_GET['sort']) && $_GET['sort'] == 'rating')
+                            echo 'selected'; ?>>Highest Rated</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-c1-1">Filter</button>
+                <a href="serviceshow.php?category_id=<?php echo $category_id; ?>"
+                    class="btn btn-outline-secondary ml-2">Reset</a>
+            </form>
+            <!-- Filter Section End -->
+
+            <div class="scrolling-wrapper row flex-row flex-nowrap mt-2 pb-2 pt-1" style="overflow-x: auto;">
+                <?php
+                //fetch service name for buttons
+                $sql = "SELECT * FROM `service` WHERE category_id = $category_id";
+                $result = mysqli_query($conn, $sql);
+                $numexist = mysqli_num_rows($result);
+                if ($numexist > 0) {
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $s_id_btn = $row['service_id'];
+                        $s_name_btn = $row['service_name'];
+                        // Added category_id to the link so it doesn't break
+                        ?>
+                        <div class="col-auto">
+                            <a href="serviceshow.php?category_id=<?php echo $category_id; ?>&serviceid=<?php echo $s_id_btn ?>"><button
+                                    type="button" class="btn btn-outline-c1-1"><?php echo $s_name_btn ?></button></a>
+                        </div>
                         <?php
                     }
+                } else {
+                    echo '<div class="alert alert-danger col-12" role="alert">No Services under ' . $category_name . '</div>';
                 }
-            } else {
-                echo '
-            <div class="alert alert-danger" role="alert">
-                No any Services under ' . $category_name . '
+                ?>
             </div>
-            
-            ';
-            }
-            ?>
 
         </div>
     </div>
 
-    <!-- ===landing page image End=== -->
-
-
-
     <!-- ===Service provider gig show page image Start=== -->
-    <div class="container">
+    <div class="container mt-4">
 
         <div class="row">
             <!-- ===Left side main page Start=== -->
             <div class="col-sm-7">
                 <div class="">
                     <?php
-                    //fetch service name    
-                    $price = false;
-                    $fetchspgig = "SELECT * FROM `sp_service` where `category_id` = $category_id";
-                    $gigresult = mysqli_query($conn, $fetchspgig);
-                    while ($gigrow = mysqli_fetch_assoc($gigresult)) {
-                        $service_title = $gigrow['service_title'];
-                        $category_id = $gigrow['category_id'];
-                        $sp_id = $gigrow['sp_id'];
-                        $price = $gigrow['price'];
-                        $description = $gigrow['description'];
-                        if ($gigrow['availability'] == 1) {
-                            $availibility = "Yes";
-                        } else {
-                            $availibility = "No";
+                    // Build Query for SP Gigs
+                    $query = "SELECT ss.*, s.sp_name, s.area AS sp_area_text,
+                              se.service_name,
+                              c.city_name,
+                              a.area_name,
+                              (SELECT AVG(rating) FROM reviews r WHERE r.sp_id = ss.sp_id) as avg_rating
+                              FROM sp_service ss
+                              JOIN sp s ON ss.sp_id = s.sp_id
+                              JOIN service se ON ss.service_id = se.service_id
+                              LEFT JOIN city c ON s.city_id = c.city_id
+                              LEFT JOIN area a ON s.area_id = a.area_id
+                              WHERE ss.category_id = $category_id";
+
+                    // Apply Filters
+                    if (isset($_GET['city_id']) && !empty($_GET['city_id'])) {
+                        $f_city = $_GET['city_id'];
+                        $query .= " AND s.city_id = $f_city";
+                    }
+                    if (isset($_GET['area_name']) && !empty($_GET['area_name'])) {
+                        $f_area_name = mysqli_real_escape_string($conn, $_GET['area_name']);
+                        // Filter by exact name in Area table (via ID) OR substring match in SP's area text column
+                        // Logic: IF SP has area_id set, it matches. IF SP has area text set, it matches.
+                        $query .= " AND (
+                                        s.area LIKE '%$f_area_name%' 
+                                        OR s.area_id IN (SELECT area_id FROM area WHERE area_name LIKE '%$f_area_name%')
+                                    )";
+                    }
+                    if (isset($_GET['serviceid']) && !empty($_GET['serviceid'])) {
+                        $f_service = $_GET['serviceid'];
+                        $query .= " AND ss.service_id = $f_service";
+                    }
+
+                    // Apply Sorting
+                    if (isset($_GET['sort'])) {
+                        $sort = $_GET['sort'];
+                        if ($sort == 'price_asc') {
+                            $query .= " ORDER BY CAST(ss.price AS UNSIGNED) ASC";
+                        } elseif ($sort == 'price_desc') {
+                            $query .= " ORDER BY CAST(ss.price AS UNSIGNED) DESC";
+                        } elseif ($sort == 'rating') {
+                            $query .= " ORDER BY avg_rating DESC";
                         }
+                    }
 
-                        $spname = "SELECT * FROM `sp` WHERE sp_id = $sp_id";
-                        $spname_result = mysqli_query($conn, $spname);
-                        while ($sprow = mysqli_fetch_assoc($spname_result)) {
-                            $sp_name = $sprow['sp_name'];
-                        }
-                        $service_id = $gigrow['service_id'];
-                        $servicename = "SELECT * FROM `service` WHERE service_id = $service_id";
-                        $servicename_result = mysqli_query($conn, $servicename);
-                        while ($servicerow = mysqli_fetch_assoc($servicename_result)) {
-                            $service_name = $servicerow['service_name'];
-                        }
+                    $gigresult = mysqli_query($conn, $query);
 
-                        ?>
+                    // Fallback if no result or error
+                    if (!$gigresult) {
+                        echo '<div class="alert alert-warning">No results found or error in query.</div>';
+                    } else if (mysqli_num_rows($gigresult) == 0) {
+                        echo '<div class="alert alert-info">No service providers found for your criteria.</div>';
+                    } else {
 
-                        <!-- main card start -->
-                        <form action="manage_cart.php" method="post">
-                            <div class="media m-4">
-                                <div class="media-body col-7">
+                        while ($gigrow = mysqli_fetch_assoc($gigresult)) {
+                            $service_title = $gigrow['service_title'];
+                            $current_category_id = $gigrow['category_id'];
+                            $sp_id = $gigrow['sp_id'];
+                            $price = $gigrow['price'];
+                            $description = $gigrow['description'];
+                            $sp_name = $gigrow['sp_name'];
+                            $service_name = $gigrow['service_name'];
+                            $service_id = $gigrow['service_id'];
+                            
+                            // Location Logic
+                            $city_name = $gigrow['city_name'];
+                            $area_name = $gigrow['area_name'];
+                            $sp_area_text = $gigrow['sp_area_text'];
+                            
+                            $display_location = $city_name;
+                            if(!empty($area_name)){
+                                $display_location = $area_name . ", " . $city_name;
+                            } elseif(!empty($sp_area_text)){
+                                $display_location = $sp_area_text . ", " . $city_name;
+                            }
 
-                                    <span class="text-success"
-                                        style="text-transform:uppercase;"><?php echo $service_name ?></span>
-                                    <hr style="margin:2px;">
-                                    <h5 class="mt-0"><?php
-                                    echo $service_title;
-                                    ?></h5>
-                                    <h6>Service provider: <?php echo $sp_name; ?></h6>
-                                    <h6 class="badge badge-success">4.4 <i class="fa-solid fa-star"></i></h6>
-                                    <h6>Starts at <small>Rs. </small><?php echo $price ?>/-</h6>
-                                    <hr style="margin-bottom: 5px;">
-                                    <p><?php echo $description ?></p>
-                                    <!-- <a href="" data-toggle="modal" data-target="#exampleModal"><b>View details</b> </a> -->
+                            $avg_rating = $gigrow['avg_rating'];
+                            $display_rating = $avg_rating ? number_format($avg_rating, 1) : 'New';
 
-                                    <!--comment out start Modal -->
-                                    <!-- <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="exampleModalLabel"><?php echo $service_name ?></h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
+                            ?>
+
+                                <!-- main card start -->
+                                <form action="manage_cart.php" method="post">
+                                    <div class="media m-4 border p-3 rounded shadow-sm bg-white">
+                                        <div class="media-body col-7">
+
+                                            <span class="text-success"
+                                                style="text-transform:uppercase; font-weight:bold;"><?php echo $service_name ?></span>
+                                            <hr style="margin:2px;">
+                                            <h5 class="mt-2 font-weight-bold" style="color:#0A2647"><?php echo $service_title; ?>
+                                            </h5>
+                                            
+                                            <div class="d-flex align-items-center flex-wrap mb-1">
+                                                <h6 class="text-muted mb-0 mr-3"><i class="fas fa-user-circle"></i> <?php echo $sp_name; ?></h6>
+                                                <small class="text-dark"><i class="fas fa-map-marker-alt text-danger"></i> <?php echo $display_location; ?></small>
                                             </div>
-                                            <div class="modal-body">
-                                                <p>Add details here </p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                <button type="button" class="btn btn-primary">Save changes</button>
+
+                                            <h6
+                                                class="badge <?php echo ($display_rating === 'New') ? 'badge-info' : 'badge-warning'; ?>">
+                                            <?php echo $display_rating; ?> <i class="fa-solid fa-star"></i>
+                                            </h6>
+
+                                            <h5 class="text-primary mt-2">Rs. <?php echo $price ?>/-</h5>
+
+                                            <p class="text-secondary small mt-2"><?php echo $description ?></p>
+                                        </div>
+
+                                        <div class="ml-2 text-center" style="width:12rem;">
+                                            <img src="../img/<?php echo $current_category_id ?>.jpg"
+                                                style="width:100%; height:120px; object-fit:cover; border-radius:10px"
+                                                class="card-img-top mb-2" alt="...">
+                                            <div class="card-body text-center p-0">
+                                                <button type="submit" name="add_to_cart" class="btn btn-block btn-c1-1"
+                                                    style="border-radius:10px;">Add to Cart</button>
+                                                <input type="hidden" name="category_id" value="<?php echo $current_category_id ?>">
+                                                <input type="hidden" name="service_id" value="<?php echo $service_id ?>">
+                                                <input type="hidden" name="service_name" value="<?php echo $service_name ?>">
+                                                <input type="hidden" name="service_title" value="<?php echo $service_title ?>">
+                                                <input type="hidden" name="price" value="<?php echo $price ?>">
+                                                <input type="hidden" name="sp_name" value="<?php echo $sp_name; ?>">
+                                                <input type="hidden" name="sp_id" value="<?php echo $sp_id; ?>">
                                             </div>
                                         </div>
                                     </div>
-                                </div> -->
-                                    <!--comment out enc modal end -->
+                                </form>
+                                <!-- main card end -->
 
-
-                                    <!-- <div class="media mt-3">
-                                <a class="mr-3" href="#">
-                                    <img src="..." alt="...">
-                                </a>
-                                <div class="media-body">
-                                    <h5 class="mt-0">Media heading</h5>
-                                    <p>Greetings loved ones lets take a journey. Yes, we make angels cry, raining down on earth from up above. Give you something good to celebrate. I used to bite my tongue and hold my breath. Im ma get your heart racing in my skin-tight jeans. As I march alone to a different beat. Summer after high school when we first met. Youre so hypnotizing, could you be the devil? Could you be an angel? It time to bring out the big balloons. Thought that I was the exception Bikinis, zucchinis, Martinis, no weenies</p>
-                                </div>
-                            </div> -->
-                                </div>
-                                <!-- <center>
-                                <div class="">
-                                    <img src="img/plumber.jpg" style="width:100px; height:100px; object-fit:cover;" class="mr-3" alt="..."><br>
-                                    <a href="" class="btn btn-c1-1">Add to Cart</a>
-                                </div>
-                            </center> -->
-
-                                <div class=" ml-5 text-center" style="width:10rem;">
-                                    <img src="../img/<?php echo $category_id ?>.jpg"
-                                        style="width:100px; height:100px;object-fit:cover; border-radius:10px"
-                                        class="card-img-top" alt="...">
-                                    <div class="card-body text-center">
-                                        <button type="submit" name="add_to_cart" class="card-link btn btn-c1-1"
-                                            style="border-radius:10px;">Add to Cart</button>
-                                        <!-- category id pn moklvi pdi because jo category id bahar thi set thy ne nai aave to error batavse dynamic page che atle. -->
-                                        <input type="hidden" name="category_id" value="<?php echo $category_id ?>">
-                                        <input type="hidden" name="service_id" value="<?php echo $service_id ?>">
-                                        <input type="hidden" name="service_name" value="<?php echo $service_name ?>">
-                                        <input type="hidden" name="service_title" value="<?php echo $service_title ?>">
-                                        <input type="hidden" name="price" value="<?php echo $price ?>">
-                                        <input type="hidden" name="sp_name" value="<?php echo $sp_name; ?>">
-                                        <input type="hidden" name="sp_id" value="<?php echo $sp_id; ?>">
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <hr>
-                        <!-- main card end -->
-
-                        <?php
-                        //end while loop
+                            <?php
+                        } // end while
                     }
                     ?>
 
@@ -231,12 +284,11 @@ include 'includes/navbar.php';
 
 
             <!-- ===Right side main page Start=== -->
-            <div class="col-sm-4 sticky">
+            <div class="col-sm-4 sticky d-none d-sm-block">
                 <div class="">
 
                     <!-- Message section -->
                     <?php
-                    //Alert OR Error Message:
                     if (isset($_SESSION['status'])) {
                         echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
                         <strong>Success! </strong> ' . $_SESSION['status'] . '
@@ -256,12 +308,12 @@ include 'includes/navbar.php';
                     }
                     ?>
 
-
-
-                    <div class="row justify-content-around " style="bottom:0; align-items:center;">
-                        <!-- <a href="" class="card-link btn btn-c1-1" style="border-radius:10px;">Add to Cart</a> -->
-                        <!-- <h3 class="" id="grandtotal">&#8377;/-</h2> -->
-                        <a href="mycart.php" class="card-link btn btn-c1-2 px-5 py-3 "><b>View Cart</b></a>
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Your Cart</h5>
+                            <p class="card-text">Ready to checkout?</p>
+                            <a href="mycart.php" class="btn btn-c1-2 btn-block"><b>View Cart</b></a>
+                        </div>
                     </div>
 
                 </div>
@@ -271,23 +323,50 @@ include 'includes/navbar.php';
     </div>
     <!-- ===Service provider gig show page image End=== -->
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Use jQuery for simplified AJAX
+        function fetchAreas(cityId) {
+            if (cityId) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'get_areas.php',
+                    data: { city_id: cityId },
+                    success: function (html) {
+                        $('#area_list').html(html);
+                        // Clear input when city changes
+                        //$('#area_input').val(''); 
+                    }
+                });
+            } else {
+                $('#area_list').html('');
+            }
+        }
 
-
-
+        // Retain Selected Area on Load (if exists)
+        $(document).ready(function () {
+            var urlParams = new URLSearchParams(window.location.search);
+            var cityId = urlParams.get('city_id');
+            // We only need to fetch datalist options if city is selected
+            if (cityId) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'get_areas.php',
+                    data: { city_id: cityId },
+                    success: function (html) {
+                        $('#area_list').html(html);
+                    }
+                });
+            }
+        });
+    </script>
 
     <script>
         var grandtotal = document.getElementById('grandtotal');
         var myVariable = localStorage.getItem("myVar");
-        console.log(myVariable);
-        grandtotal.innerText = myVariable;
+        if (grandtotal) grandtotal.innerText = myVariable;
     </script>
-
-
-
-
-
 
     <?php
     include '../includes/footer.php';
-    // include 'includes/navfooter.php';
     ?>

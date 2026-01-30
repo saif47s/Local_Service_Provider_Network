@@ -24,15 +24,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $address = mysqli_real_escape_string($conn, $_POST['address']);
     $pincode = mysqli_real_escape_string($conn, $_POST['pincode']);
+    $pincode = mysqli_real_escape_string($conn, $_POST['pincode']);
+    $entered_city_name = mysqli_real_escape_string($conn, $_POST['city_name']);
 
-    // Basic Validation (Client-side should be there too)
-    if (strlen($phone) == 11 && strlen($pincode) == 5) {
+    // Find City ID from Name
+    $city_check_sql = "SELECT city_id FROM city WHERE city_name LIKE '$entered_city_name'";
+    $city_check_res = mysqli_query($conn, $city_check_sql);
+
+    if (mysqli_num_rows($city_check_res) > 0) {
+        $city_row_fetch = mysqli_fetch_assoc($city_check_res);
+        $city_id = $city_row_fetch['city_id'];
+        $valid_city = true;
+    } else {
+        $valid_city = false;
+        $msg = '<div class="alert alert-warning">The city you entered is not serviceable. Please select a valid city from the list.</div>';
+    }
+
+    // Basic Validation
+    if ($valid_city && strlen($phone) == 11 && strlen($pincode) == 5) {
         $sql_update = "UPDATE `customer` SET 
             `first_name`='$first_name', 
             `last_name`='$last_name', 
             `phone`='$phone', 
             `address`='$address', 
-            `pincode`='$pincode' 
+            `pincode`='$pincode',
+            `city_id`='$city_id'
             WHERE `customer_id`='$customer_id'";
 
         if (mysqli_query($conn, $sql_update)) {
@@ -104,20 +120,36 @@ $row = mysqli_fetch_assoc($result);
                             <div class="form-group col-md-6">
                                 <label>City</label>
                                 <?php
-                                $city_id = $row['city_id'];
-                                $city_sql = "SELECT city_name FROM city WHERE city_id = '$city_id'";
-                                $city_res = mysqli_query($conn, $city_sql);
-                                $city_row = mysqli_fetch_assoc($city_res);
+                                // Fetch Current City Name for Display
+                                $current_city_name = "";
+                                if ($row['city_id']) {
+                                    $curr_city_sql = "SELECT city_name FROM city WHERE city_id = '" . $row['city_id'] . "'";
+                                    $curr_city_res = mysqli_query($conn, $curr_city_sql);
+                                    if ($curr_c = mysqli_fetch_assoc($curr_city_res)) {
+                                        $current_city_name = $curr_c['city_name'];
+                                    }
+                                }
                                 ?>
-                                <input type="text" class="form-control"
-                                    value="<?php echo isset($city_row['city_name']) ? $city_row['city_name'] : ''; ?>"
-                                    readonly>
-                                <small class="text-muted">City cannot be changed currently.</small>
+                                <input type="text" name="city_name" list="city_list" class="form-control"
+                                    placeholder="Type your City..." value="<?php echo $current_city_name; ?>" required
+                                    autocomplete="off">
+                                <datalist id="city_list">
+                                    <?php
+                                    $city_fetch_sql = "SELECT * FROM city";
+                                    $city_fetch_res = mysqli_query($conn, $city_fetch_sql);
+                                    while ($c_row = mysqli_fetch_assoc($city_fetch_res)) {
+                                        echo '<option value="' . $c_row['city_name'] . '">';
+                                    }
+                                    ?>
+                                </datalist>
                             </div>
                         </div>
 
                         <button type="submit" name="update_profile" class="btn btn-success btn-block">Update
                             Profile</button>
+
+                        <a href="logout.php" class="btn btn-danger btn-block mt-3"><i class="fas fa-power-off"></i>
+                            Logout</a>
                     </form>
                 </div>
             </div>

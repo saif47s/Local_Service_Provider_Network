@@ -55,11 +55,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result3) {
 
             // WALLET DEDUCTION LOGIC
-            // 1. Get Order Total
-            $price_sql = "SELECT total FROM order_master WHERE order_id = $order_id";
+            // 1. Get Order Total AND Customer ID
+            $price_sql = "SELECT total, customer_id FROM order_master WHERE order_id = $order_id";
             $price_res = mysqli_query($conn, $price_sql);
             $price_row = mysqli_fetch_assoc($price_res);
             $total_amount = $price_row['total'];
+            $customer_id = $price_row['customer_id'];
 
             // 2. Calculate Commission (10%)
             $commission = $total_amount * 0.10;
@@ -73,7 +74,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_query($conn, $comm_sql);
 
             $_SESSION['status_done'] = "Order Completed.";
-            header("location: order_details.php?order_id= $order_id &sp_id= $sp_id");
+            // Redirect to Review Page
+            header("location: sp_review_customer.php?order_id=$order_id&sp_id=$sp_id&customer_id=$customer_id");
         } else {
             $_SESSION['status_undone'] = "Order not Completed.";
             header("location: order_details.php?order_id= $order_id &sp_id= $sp_id");
@@ -90,8 +92,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql4 = "UPDATE `user_order` SET `status` = 'uncompleted' WHERE `user_order`.`order_id` = $order_id AND `user_order`.`service_id` = $service_id AND `user_order`.`sp_id` = $sp_id";
         $result4 = mysqli_query($conn, $sql4);
         if ($result4) {
+            // Get Customer ID for Redirect
+            $cust_sql = "SELECT customer_id FROM order_master WHERE order_id = $order_id";
+            $cust_res = mysqli_query($conn, $cust_sql);
+            $cust_row = mysqli_fetch_assoc($cust_res);
+            $customer_id = $cust_row['customer_id'];
+
             $_SESSION['status_done'] = "Order Uncompleted.";
-            header("location: order_details.php?order_id= $order_id &sp_id= $sp_id");
+            header("location: sp_review_customer.php?order_id=$order_id&sp_id=$sp_id&customer_id=$customer_id");
         } else {
             $_SESSION['status_undone'] = "Order not Uncompleted.";
             header("location: order_details.php?order_id= $order_id &sp_id= $sp_id");
