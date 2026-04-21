@@ -69,7 +69,6 @@ $username = "root";  // Default username for XAMPP
 $password = "";  // Leave blank for XAMPP default
 $database = "hs";  // Name of the database you created
 ```
-- Open your browser and navigate to http://localhost/BCA-home-Services-Project/db/dbconnect.php to make database connection.
 
 5. **Run the project:**
 - After successfully connection of database, you can access the platform -> http://localhost/BCA-home-Services-Project/index.php 
@@ -108,14 +107,3 @@ Contributions are always welcome!
 
 ## License
 This project is licensed. 
-
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-
-## Contact
-For questions or suggestions, please contact:
-
-- **Deep Korat** - [Email](mailto:your-deepkorat13@gmail.com) 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Deep_Korat-informational?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/deep-korat-03273a210/
-)
-
