@@ -1,5 +1,5 @@
-node_modules
-/DataBase/dbconnect.php
-/php/send_email.php
-/Project/ForgotPassword/Email/email.php
-/php/test_smtp.php
+# node_modules
+# /DataBase/dbconnect.php
+# /php/send_email.php
+# /Project/ForgotPassword/Email/email.php
+# /php/test_smtp.php
