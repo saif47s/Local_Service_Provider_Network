@@ -2,8 +2,24 @@
 include '../DataBase/dbconnect.php';
 // session_start();
 include 'assets/include/admin_header.php';
-?>
 
+// Handle deletion of a specific service gig
+if (isset($_GET['delete_service_id']) && isset($_GET['spid'])) {
+    $sp_id = mysqli_real_escape_string($conn, $_GET['spid']);
+    $service_id = mysqli_real_escape_string($conn, $_GET['delete_service_id']);
+    $sp_name = mysqli_real_escape_string($conn, $_GET['spname']);
+
+    $delete_sql = "DELETE FROM `sp_service` WHERE sp_id = '$sp_id' AND service_id = '$service_id'";
+    if (mysqli_query($conn, $delete_sql)) {
+        $_SESSION['status'] = "Service Gig deleted successfully!";
+    } else {
+        $_SESSION['statusfail'] = "Failed to delete Service Gig!";
+    }
+    // Redirect to same page without delete params
+    echo "<script>window.location.href='sp_gig_view.php?spid=$sp_id&spname=$sp_name';</script>";
+    exit();
+}
+?>
 
 
 <div class="col-sm-9 col-xs-12 content pt-3 pl-0">
@@ -34,7 +50,7 @@ include 'assets/include/admin_header.php';
                 unset($_SESSION['status']);
             } elseif (isset($_SESSION['statusfail'])) {
                 echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Success! </strong> ' . $_SESSION['statusfail'] . '
+                        <strong>Error! </strong> ' . $_SESSION['statusfail'] . '
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                         </button>
@@ -71,6 +87,7 @@ include 'assets/include/admin_header.php';
                                 <th>Price</th>
                                 <th>Description</th>
                                 <th>Availibility</th>
+                                <th>Operation</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -103,9 +120,9 @@ include 'assets/include/admin_header.php';
                                     FROM `service` INNER JOIN `category` 
                                     ON `service`.category_id=`category`.category_id WHERE `service`.service_id = $service_id ";
                                         $resultfetchother = mysqli_query($conn, $fetchother);
-                                        while ($row = mysqli_fetch_assoc($resultfetchother)) {
-                                            $service_name = $row['service_name'];
-                                            $category = $row['category_name'];
+                                        while ($row_other = mysqli_fetch_assoc($resultfetchother)) {
+                                            $service_name = $row_other['service_name'];
+                                            $category = $row_other['category_name'];
 
                                             echo '<tr>
                                         <td>' . $sno . '</td>
@@ -115,6 +132,13 @@ include 'assets/include/admin_header.php';
                                         <td>' . $price . '</td>
                                         <td>' . $description . '</td>
                                         <td>' . $availibility . '</td>                                              
+                                        <td class="text-center">
+                                            <a href="sp_gig_view.php?spid=' . $sp_id . '&spname=' . urlencode($sp_name) . '&delete_service_id=' . $service_id . '" 
+                                               class="btn btn-danger btn-sm" 
+                                               onclick="return confirm(\'Are you sure you want to delete this service gig?\')">
+                                                <i class="fa fa-trash"></i> Delete
+                                            </a>
+                                        </td>
                                         </tr>';
                                         }
                                     }
@@ -132,6 +156,7 @@ include 'assets/include/admin_header.php';
                                 <th>Price</th>
                                 <th>Description</th>
                                 <th>Availibility</th>
+                                <th>Operation</th>
                             </tr>
                         </tfoot>
                     </table>

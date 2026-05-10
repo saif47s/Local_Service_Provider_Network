@@ -19,8 +19,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST["email"];
     $phone = $_POST["phone"];
     $transaction_id = $_POST["transaction_id"];
-    $city_name = $_POST["sp_city"];
-    $area = $_POST["area"];
+    $city_id = $_POST["sp_city_id"];
+    $area_id = $_POST["area_id"];
     $pincode = $_POST["pincode"];
     $username = $_POST["username"];
     $password = $_POST["password"];
@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $city_row = mysqli_fetch_assoc($fetch_city_result);
                     $city_id = $city_row['city_id'];
                     // $sql2 = "INSERT INTO `sp` (`sp_id`, `login_id`, `sp_name`, `email`, `phone`, `city_id`, `pincode`) VALUES (NULL, '16', 'deepkorat', 'deepkorat213@gmail.com', '9687480417', '5', '341262')";
-                    $sql2 = "INSERT INTO `sp` (`sp_id`, `login_id`, `sp_name`, `email`, `phone`, `transaction_id`, `city_id`, `area`, `pincode`, `status`) VALUES ('', '$login_id', '$sp_name', '$email','$phone', '$transaction_id', '$city_id', '$area', '$pincode', 'deactive')";
+                    $sql2 = "INSERT INTO `sp` (`sp_id`, `login_id`, `sp_name`, `email`, `phone`, `transaction_id`, `city_id`, `area_id`, `pincode`, `status`) VALUES ('', '$login_id', '$sp_name', '$email','$phone', '$transaction_id', '$city_id', '$area_id', '$pincode', 'deactive')";
                     $result2 = mysqli_query($conn, $sql2);
                     if ($result2) {
                         // Send Token Email
@@ -197,6 +197,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
+                <!-- Terms and Conditions for Platform Fee -->
+                <div class="form-row mb-3 mt-1">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="platformFeeTerms" required>
+                            <label class="form-check-label small text-secondary font-weight-bold" for="platformFeeTerms">
+                                I agree that the platform fee collected from the customer will be automatically deducted from my wallet balance upon service completion.
+                            </label>
+                            <div class="invalid-feedback">You must agree to the platform fee terms.</div>
+                        </div>
+                    </div>
+                </div>
+
 
 
 
@@ -206,7 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="form-row">
                     <div class="form-group col-md-4 input-group-sm">
                         <label for="city">City</label>
-                        <select id="sp_city" class=" custom-select" name="sp_city" required>
+                        <select id="sp_city" class=" custom-select" name="sp_city_id" required>
                             <option value="">Choose City</option>
                             <?php // category view code. Data get from category table
                             $sql = "SELECT * FROM `city`";
@@ -214,20 +227,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             if ($result) {
                                 while ($row = mysqli_fetch_assoc($result)) {
                                     $city_name = $row['city_name'];
-                                    echo '<option value="' . $city_name . '">' . $city_name . '</option>';
+                                    $city_id = $row['city_id'];
+                                    echo '<option value="' . $city_id . '">' . $city_name . '</option>';
                                 }
                             }
                             ?>
-                            <!-- <option value="two">.this..</option>
-                            <option value="three">.and..</option>
-                            <option value="five">.that..</option> -->
                         </select>
                         <div class="invalid-feedback">Please choose a city.</div>
                     </div>
                     <div class="form-group col-md-4 input-group-sm">
-                        <label for="area">Area:-</label>
-                        <input type="text" class="form-control" id="area" name="area" placeholder="Enter Area" required>
-                        <div class="invalid-feedback">Please enter an area.</div>
+                        <label for="area">Area / Zone:-</label>
+                        <select class="form-control" name="area_id" id="area_id" required>
+                            <option value="">Choose Area</option>
+                        </select>
+                        <div class="invalid-feedback">Please choose an area.</div>
                     </div>
                     <div class="form-group col-md-4 input-group-sm">
                         <label for="Pincode">Pincode(5 digits)</label>
@@ -311,6 +324,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
             }, false);
         })();
+    </script>
+
+    <script>
+        const citySelect = document.getElementById('sp_city');
+        const areaSelect = document.getElementById('area_id');
+
+        async function loadAreas() {
+            if (!citySelect || !areaSelect || !citySelect.value) {
+                return;
+            }
+            const formData = new FormData();
+            formData.append('city_id', citySelect.value);
+            const response = await fetch('assets/ajax/get_areas.php', {
+                method: 'POST',
+                body: formData
+            });
+            const html = await response.text();
+            areaSelect.innerHTML = html || '<option value="">Choose Area</option>';
+        }
+
+        if (citySelect) {
+            citySelect.addEventListener('change', loadAreas);
+        }
     </script>
 
 

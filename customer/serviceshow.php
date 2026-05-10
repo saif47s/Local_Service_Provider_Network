@@ -7,6 +7,10 @@ $css_directory = '../css/main.min.css';
 $css_directory2 = '../css/main.min.css.map';
 include 'includes/header.php';
 include 'includes/navbar.php';
+
+// Initialize filter parameters at the top to avoid undefined variable warnings
+$filter_city = isset($_GET['filter_city']) ? (int)$_GET['filter_city'] : 0;
+$filter_area = isset($_GET['filter_area']) ? (int)$_GET['filter_area'] : 0;
 ?>
 
 <style>
@@ -63,6 +67,7 @@ include 'includes/navbar.php';
             <h1 class="display-4"><b><?php echo $category_name ?></b></h1>
         </div>
     </div>
+<<<<<<< HEAD
 
     <div class="bg-white sticky-top shadow-sm">
         <div class="container mb-3 py-3">
@@ -115,10 +120,18 @@ include 'includes/navbar.php';
             <div class="scrolling-wrapper row flex-row flex-nowrap mt-2 pb-2 pt-1" style="overflow-x: auto;">
                 <?php
                 //fetch service name for buttons
+=======
+    <div class="bg-white border-bottom shadow-sm">
+        <div class="container mb-3 py-3">
+            <div class="d-flex flex-wrap align-items-center mb-3">
+                <?php
+                //fetch service name
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
                 $sql = "SELECT * FROM `service` WHERE category_id = $category_id";
                 $result = mysqli_query($conn, $sql);
                 $numexist = mysqli_num_rows($result);
                 if ($numexist > 0) {
+<<<<<<< HEAD
                     while ($row = mysqli_fetch_assoc($result)) {
                         $s_id_btn = $row['service_id'];
                         $s_name_btn = $row['service_name'];
@@ -132,10 +145,71 @@ include 'includes/navbar.php';
                     }
                 } else {
                     echo '<div class="alert alert-danger col-12" role="alert">No Services under ' . $category_name . '</div>';
+=======
+                    if ($result) {
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            $service_id = $row['service_id'];
+                            $service_name = $row['service_name'];
+                            ?>
+                            <a href="serviceshow.php?serviceid=<?php echo $service_id ?>"><button type="button"
+                                    class="btn btn-outline-c1-1 btn-sm mr-2 mb-2"><?php echo $service_name ?></button></a>
+                            <?php
+                        }
+                    }
+                } else {
+                    echo '<div class="alert alert-danger" role="alert">No services under ' . $category_name . '</div>';
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
                 }
                 ?>
             </div>
 
+            <!-- Location Filter Bar -->
+            <div class="card bg-light border-0">
+                <div class="card-body py-2">
+                    <form action="serviceshow.php" method="get" class="form-row align-items-end">
+                        <input type="hidden" name="category_id" value="<?php echo $category_id; ?>">
+                        
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <label class="small font-weight-bold mb-1"><i class="fas fa-city mr-1"></i>City</label>
+                            <select class="form-control form-control-sm" name="filter_city" id="filter_city">
+                                <option value="0">All Cities</option>
+                                <?php
+                                $city_sql = "SELECT * FROM city";
+                                $city_res = mysqli_query($conn, $city_sql);
+                                while($crow = mysqli_fetch_assoc($city_res)) {
+                                    $selected = ($filter_city == ($crow['city_id'] ?? '')) ? 'selected' : '';
+                                    echo '<option value="'.$crow['city_id'].'" '.$selected.'>'.$crow['city_name'].'</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <label class="small font-weight-bold mb-1"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
+                            <select class="form-control form-control-sm" name="filter_area" id="filter_area">
+                                <option value="0">All Areas</option>
+                                <?php
+                                if ($filter_city > 0) {
+                                    $area_sql = "SELECT * FROM area WHERE city_id = $filter_city";
+                                    $area_res = mysqli_query($conn, $area_sql);
+                                    while($arow = mysqli_fetch_assoc($area_res)) {
+                                        $selected = ($filter_area == ($arow['area_id'] ?? '')) ? 'selected' : '';
+                                        echo '<option value="'.$arow['area_id'].'" '.$selected.'>'.$arow['area_name'].'</option>';
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex">
+                            <button type="submit" class="btn btn-c1-1 btn-sm flex-grow-1 mr-2">Apply Filter</button>
+                            <?php if($filter_city > 0 || $filter_area > 0): ?>
+                                <a href="serviceshow.php?category_id=<?php echo $category_id; ?>" class="btn btn-outline-secondary btn-sm">Clear</a>
+                            <?php endif; ?>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -144,9 +218,10 @@ include 'includes/navbar.php';
 
         <div class="row">
             <!-- ===Left side main page Start=== -->
-            <div class="col-sm-7">
+            <div class="col-sm-8">
                 <div class="">
                     <?php
+<<<<<<< HEAD
                     // Build Query for SP Gigs
                     $query = "SELECT ss.*, s.sp_name, s.area AS sp_area_text,
                               se.service_name,
@@ -188,9 +263,41 @@ include 'includes/navbar.php';
                             $query .= " ORDER BY CAST(ss.price AS UNSIGNED) DESC";
                         } elseif ($sort == 'rating') {
                             $query .= " ORDER BY avg_rating DESC";
+=======
+                    // Build query with filters
+                    $fetchspgig = "SELECT sp_service.* FROM `sp_service` 
+                                  JOIN `sp` ON sp_service.sp_id = sp.sp_id 
+                                  WHERE sp_service.category_id = $category_id";
+                    
+                    if ($filter_city > 0) {
+                        $fetchspgig .= " AND sp.city_id = $filter_city";
+                    }
+                    if ($filter_area > 0) {
+                        $fetchspgig .= " AND sp.area_id = $filter_area";
+                    }
+                    
+                    $fetchspgig .= " ORDER BY sp_service.price ASC";
+
+                    $gigresult = mysqli_query($conn, $fetchspgig);
+                    if (mysqli_num_rows($gigresult) == 0) {
+                        echo '<div class="alert alert-info m-4">No services found for the selected location.</div>';
+                    }
+
+                    while ($gigrow = mysqli_fetch_assoc($gigresult)) {
+                        $service_title = $gigrow['service_title'];
+                        $category_id = $gigrow['category_id'];
+                        $sp_id = $gigrow['sp_id'];
+                        $price = $gigrow['price'];
+                        $description = $gigrow['description'];
+                        if ($gigrow['availability'] == 1) {
+                            $availibility = "Yes";
+                        } else {
+                            $availibility = "No";
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
                         }
                     }
 
+<<<<<<< HEAD
                     $gigresult = mysqli_query($conn, $query);
 
                     // Fallback if no result or error
@@ -199,6 +306,27 @@ include 'includes/navbar.php';
                     } else if (mysqli_num_rows($gigresult) == 0) {
                         echo '<div class="alert alert-info">No service providers found for your criteria.</div>';
                     } else {
+=======
+                        $spname_query = "SELECT sp.*, city.city_name, area.area_name 
+                                       FROM `sp` 
+                                       LEFT JOIN city ON sp.city_id = city.city_id 
+                                       LEFT JOIN area ON sp.area_id = area.area_id 
+                                       WHERE sp.sp_id = $sp_id";
+                        $spname_result = mysqli_query($conn, $spname_query);
+                        $sprow = mysqli_fetch_assoc($spname_result);
+                        
+                        $sp_name = $sprow['sp_name'];
+                        $sp_city = $sprow['city_name'] ?? "Unknown City";
+                        $sp_area = $sprow['area_name'] ?? $sprow['area'];
+
+                        $service_id = $gigrow['service_id'];
+                        $servicename = "SELECT * FROM `service` WHERE service_id = $service_id";
+                        $servicename_result = mysqli_query($conn, $servicename);
+                        while ($servicerow = mysqli_fetch_assoc($servicename_result)) {
+                            $service_name = $servicerow['service_name'];
+                        }
+                        ?>
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
 
                         while ($gigrow = mysqli_fetch_assoc($gigresult)) {
                             $service_title = $gigrow['service_title'];
@@ -286,7 +414,6 @@ include 'includes/navbar.php';
             <!-- ===Right side main page Start=== -->
             <div class="col-sm-4 sticky d-none d-sm-block">
                 <div class="">
-
                     <!-- Message section -->
                     <?php
                     if (isset($_SESSION['status'])) {
@@ -308,14 +435,18 @@ include 'includes/navbar.php';
                     }
                     ?>
 
+<<<<<<< HEAD
                     <div class="card shadow-sm">
                         <div class="card-body text-center">
                             <h5 class="card-title">Your Cart</h5>
                             <p class="card-text">Ready to checkout?</p>
                             <a href="mycart.php" class="btn btn-c1-2 btn-block"><b>View Cart</b></a>
                         </div>
+=======
+                    <div class="row justify-content-around " style="bottom:0; align-items:center;">
+                        <a href="mycart.php" class="card-link btn btn-c1-2 px-5 py-3 "><b>View Cart</b></a>
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
                     </div>
-
                 </div>
             </div>
             <!-- ===Right side main page End=== -->
@@ -362,9 +493,32 @@ include 'includes/navbar.php';
     </script>
 
     <script>
+<<<<<<< HEAD
         var grandtotal = document.getElementById('grandtotal');
         var myVariable = localStorage.getItem("myVar");
         if (grandtotal) grandtotal.innerText = myVariable;
+=======
+        const filterCity = document.getElementById('filter_city');
+        const filterArea = document.getElementById('filter_area');
+
+        if (filterCity) {
+            filterCity.addEventListener('change', async function () {
+                const cityId = this.value;
+                if (cityId == 0) {
+                    filterArea.innerHTML = '<option value="0">All Areas</option>';
+                    return;
+                }
+                const formData = new FormData();
+                formData.append('city_id', cityId);
+                const response = await fetch('../assets/ajax/get_areas.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const html = await response.text();
+                filterArea.innerHTML = '<option value="0">All Areas</option>' + html;
+            });
+        }
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
     </script>
 
     <?php

@@ -2,6 +2,14 @@
 define('MYSITE', true);
 include '../db/dbconnect.php';
 
+// Fetch dynamic fuel price
+$fuel_price = 7;
+$fuel_sql = "SELECT setting_value FROM settings WHERE setting_key = 'fuel_price' LIMIT 1";
+$fuel_result = mysqli_query($conn, $fuel_sql);
+if ($fuel_result && mysqli_num_rows($fuel_result) > 0) {
+    $fuel_row = mysqli_fetch_assoc($fuel_result);
+    $fuel_price = (float)$fuel_row['setting_value'];
+}
 
 $title = 'Main';
 $css_directory = '../css/main.min.css';
@@ -46,8 +54,9 @@ $db_pincode = $u_row['pincode'];
                     unset($_SESSION['removeunsuccess']);
                 }
                 ?>
-                <div class="text-center border rounded bg-light my-4">
-                    <h4>CART</h4>
+                <div class="text-center border rounded bg-light my-4 p-3">
+                    <h4 class="mb-2">CART</h4>
+                    <span class="badge badge-info p-2" style="font-size: 0.9em;">Note: Fuel price is Rs <?php echo $fuel_price; ?> per kilometer.</span>
                 </div>
             </div>
 
@@ -105,10 +114,15 @@ $db_pincode = $u_row['pincode'];
                                     <tr>
                                         <th scope="row"><?php echo $sr; ?></th>
                                         <td><?php echo $value['service_title']; ?></td>
-                                        <td><?php echo $value['sp_name']; ?></td>
+                                        <td>
+                                            <?php echo $value['sp_name']; ?><br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($value['sp_location'] ?? ''); ?></small>
+                                        </td>
                                         <td>
                                             <small>Rs. </small><?php echo $value['price']; ?>
                                             <input type="hidden" class="iprice" value="<?php echo $value['price']; ?>">
+                                            <input type="hidden" class="service-id" value="<?php echo (int) $value['service_id']; ?>">
+                                            <input type="hidden" class="sp-id" value="<?php echo (int) $value['sp_id']; ?>">
                                         </td>
                                         <!-- quantity -->
                                         <form action="manage_cart.php" method="post">
@@ -141,19 +155,16 @@ $db_pincode = $u_row['pincode'];
 
                 <div class="col-lg-3">
                     <div class="border bg-light rounded p-4">
-                        <h4>Grand Total:</h4>
-                        <div class="text-right">
-                            <h6 class="text-secondary" style="display:inline-block;">Item Total: Rs. <span
-                                    id="item_total">0</span></h6><br>
-                            <h6 class="text-secondary" style="display:inline-block;">Platform Fee (5%): Rs. <span
-                                    id="commission_total">0</span></h6><br>
-                            <hr>
-                            <h6 style="display:inline-block;">Rs. </h6>
-                            <h5 style="display:inline-block;" id="gtotal"></h5>
-                            <h5 style="display:inline-block;" id="">/-</h5>
-                        </div>
+
 
                         <?php
+                        $cities = [];
+                        $cityResult = mysqli_query($conn, "SELECT city_id, city_name FROM city ORDER BY city_name");
+                        if ($cityResult) {
+                            while ($cityRow = mysqli_fetch_assoc($cityResult)) {
+                                $cities[] = $cityRow;
+                            }
+                        }
                         if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
                             ?>
                             <form action="order.php" method="post">
@@ -177,15 +188,40 @@ $db_pincode = $u_row['pincode'];
 
                                 <div class="form-group">
                                     <label>Pincode</label>
-                                    <input type="text" class="form-control" pattern="\d{5}" name="pincode" id="pincode" required
+                                    <input type="text" class="form-control" pattern="\d{5}" maxlength="5" name="pincode" id="pincode" required
                                         data-correct="<?php echo $db_pincode; ?>"
-                                        oninput="validateField(this, 'Pincode mismatch')">
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateField(this, 'Pincode mismatch')">
                                     <div class="invalid-feedback">Invalid Pincode (Must match registered pincode)</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <select class="form-control" name="city_id" id="city_id" required>
+                                        <option value="">Choose City</option>
+                                        <?php foreach ($cities as $city): ?>
+                                            <option value="<?php echo (int) $city['city_id']; ?>">
+                                                <?php echo htmlspecialchars($city['city_name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Area / Zone</label>
+                                    <select class="form-control" name="area_id" id="area_id" required>
+                                        <option value="">Choose Area</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Urgency</label>
+                                    <select class="form-control" name="urgency" id="urgency" required>
+                                        <option value="normal">Normal</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="emergency">Emergency</option>
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Service Date:-</label>
-                                    <input type="datetime-local" class="form-control" name="due_date" id="due_date" required>
+                                    <input type="datetime-local" class="form-control" name="due_date" id="due_date" min="<?php echo date('Y-m-d\TH:i'); ?>" required>
                                     <small class="text-secondary">which DATE & TIME you want a service</small>
                                     <div class="invalid-feedback">
                                         <p id="error-message"></p>
@@ -199,17 +235,24 @@ $db_pincode = $u_row['pincode'];
                                         Cash On Delivery
                                     </label>
                                 </div>
-                                <!-- <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="pay_mode" id="exampleRadios2" value="Gpay">
-                                    <label class="form-check-label" for="exampleRadios2">
-                                        GPay
+                                <hr>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="fuelTerms" required>
+                                    <label class="form-check-label small text-muted" for="fuelTerms">
+                                        I agree to pay the additional fuel charges based on the distance from the Service Provider's location to my address.
                                     </label>
-                                </div> -->
-                                <br>
+                                    <div class="invalid-feedback">You must agree to the fuel charges to place the order.</div>
+                                </div>
                                 <button type="submit" class="btn btn-primary btn-block" name="order">Make Order</button>
                                 <input type="hidden" id="total" name="total">
 
                             </form>
+                            <hr>
+                            <h6>Dynamic Pricing Estimate</h6>
+                            <small class="text-secondary d-block mb-2">Live estimate updates on area/urgency/date
+                                changes.</small>
+                            <div id="estimateSummary" class="small text-muted">Select city, area and urgency to see
+                                estimate.</div>
                             <?php
                         }
                         ?>
@@ -256,11 +299,134 @@ $db_pincode = $u_row['pincode'];
             }
 
             //print grand total
-            gtotal.innerText = totalWithCommission.toFixed(0);
-            document.getElementById("total").value = totalWithCommission.toFixed(0);
+            if (gtotal) {
+                gtotal.innerText = totalWithCommission.toFixed(0);
+            }
+            if (document.getElementById("total")) {
+                document.getElementById("total").value = totalWithCommission.toFixed(0);
+            }
         }
 
         subTotal();
+    </script>
+
+    <script>
+        const citySelect = document.getElementById('city_id');
+        const areaSelect = document.getElementById('area_id');
+        const urgencySelect = document.getElementById('urgency');
+        const dueDateInput = document.getElementById('due_date');
+        const estimateSummary = document.getElementById('estimateSummary');
+
+        async function loadAreas() {
+            if (!citySelect || !areaSelect || !citySelect.value) {
+                return;
+            }
+            const formData = new FormData();
+            formData.append('city_id', citySelect.value);
+            const response = await fetch('../assets/ajax/get_areas.php', {
+                method: 'POST',
+                body: formData
+            });
+            const html = await response.text();
+            areaSelect.innerHTML = html || '<option value="">Choose Area</option>';
+        }
+
+        async function fetchEstimateForItem(serviceId, spId, qty, basePrice) {
+            const areaId = areaSelect ? areaSelect.value : '';
+            if (!serviceId || !areaId) {
+                return null;
+            }
+            const body = new FormData();
+            body.append('service_id', serviceId);
+            if (spId) body.append('sp_id', spId);
+            body.append('area_id', areaId);
+            body.append('base_price', basePrice);
+            body.append('urgency', urgencySelect ? urgencySelect.value : 'normal');
+            if (dueDateInput && dueDateInput.value) {
+                body.append('request_time', dueDateInput.value.replace('T', ' ') + ':00');
+            }
+
+            const response = await fetch('../api/dynamic_pricing/calculate_price.php', {
+                method: 'POST',
+                body: body
+            });
+            const data = await response.json();
+            if (!data.success) {
+                return null;
+            }
+            return {
+                total: (parseFloat(data.data.final_price) || 0) * qty,
+                breakdown: data.data.breakdown
+            };
+        }
+
+        async function refreshDynamicEstimate() {
+            if (!estimateSummary) {
+                return;
+            }
+            if (!areaSelect || !areaSelect.value) {
+                estimateSummary.innerText = 'Select area to view estimate.';
+                return;
+            }
+            if (!dueDateInput || !dueDateInput.value) {
+                estimateSummary.innerText = 'Select service date & time to view estimate.';
+                return;
+            }
+
+            const serviceIds = document.querySelectorAll('.service-id');
+            const spIds = document.querySelectorAll('.sp-id');
+            const quantities = document.querySelectorAll('.iquantity');
+            const basePrices = document.querySelectorAll('.iprice');
+            let total = 0;
+            let multiplierNotes = [];
+
+            for (let i = 0; i < serviceIds.length; i++) {
+                const serviceId = parseInt(serviceIds[i].value, 10);
+                const spId = spIds[i] ? parseInt(spIds[i].value, 10) : null;
+                const qty = parseInt(quantities[i].value, 10) || 1;
+                const basePrice = parseFloat(basePrices[i].value) || 0;
+                const result = await fetchEstimateForItem(serviceId, spId, qty, basePrice);
+                if (result !== null) {
+                    total += result.total;
+                    // Collect significant multipliers (> 1.0)
+                    const m = result.breakdown.multipliers;
+                    if (m.time > 1) multiplierNotes.push("Peak/Weekend Surcharge");
+                    if (m.demand > 1) multiplierNotes.push("High Demand in Area");
+                    if (m.urgency > 1) multiplierNotes.push("Urgency Fee");
+                    if (m.availability > 1) multiplierNotes.push("Low Provider Availability");
+                    if (m.zone > 1) multiplierNotes.push("Zone Premium");
+                }
+            }
+
+            // Deduplicate notes
+            multiplierNotes = [...new Set(multiplierNotes)];
+            let notesHtml = multiplierNotes.length > 0 ?
+                '<div class="mt-2 text-info">Factors: ' + multiplierNotes.join(', ') + '</div>' : '';
+
+            const commission = total * 0.05;
+            const grand = total + commission;
+            estimateSummary.innerHTML =
+                'Estimated Item Total: <b>Rs. ' + total.toFixed(2) + '</b><br>' +
+                'Estimated Platform Fee (5%): <b>Rs. ' + commission.toFixed(2) + '</b><br>' +
+                'Estimated Final Total: <b>Rs. ' + grand.toFixed(2) + '</b>' +
+                notesHtml;
+        }
+
+        if (citySelect) {
+            citySelect.addEventListener('change', async function () {
+                await loadAreas();
+                await refreshDynamicEstimate();
+            });
+        }
+        if (areaSelect) {
+            areaSelect.addEventListener('change', refreshDynamicEstimate);
+        }
+        if (urgencySelect) {
+            urgencySelect.addEventListener('change', refreshDynamicEstimate);
+        }
+        if (dueDateInput) {
+            dueDateInput.addEventListener('change', refreshDynamicEstimate);
+        }
     </script>
 
 
@@ -269,18 +435,51 @@ $db_pincode = $u_row['pincode'];
         const datetimeInput = document.getElementById("due_date");
         const errorMessage = document.getElementById("error-message");
 
-        datetimeInput.addEventListener("input", function () {
+        // Set min attribute to current time on page load to prevent selecting past times
+        function updateMinDateTime() {
+            const now = new Date();
+            // Adjust to local ISO string format YYYY-MM-DDTHH:mm
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            datetimeInput.min = minDateTime;
+        }
+
+        window.addEventListener('load', updateMinDateTime);
+
+        datetimeInput.addEventListener("change", function () {
             const selectedDatetime = new Date(datetimeInput.value);
             const now = new Date();
+            
             if (selectedDatetime < now) {
                 errorMessage.textContent = "Please select a future date and time.";
                 datetimeInput.setCustomValidity("Please select a future date and time.");
+                datetimeInput.classList.add('is-invalid');
+                // Optional: Clear value if invalid to force correct selection
+                // datetimeInput.value = ""; 
             } else {
                 errorMessage.textContent = "";
                 datetimeInput.setCustomValidity("");
+                datetimeInput.classList.remove('is-invalid');
             }
         });
 
+        // Also check on input for real-time feedback
+        datetimeInput.addEventListener("input", function() {
+            if(datetimeInput.classList.contains('is-invalid')) {
+                const selectedDatetime = new Date(datetimeInput.value);
+                if(selectedDatetime >= new Date()) {
+                    errorMessage.textContent = "";
+                    datetimeInput.setCustomValidity("");
+                    datetimeInput.classList.remove('is-invalid');
+                }
+            }
+        });
+    </script>
+    <script>
         function validateField(input, msg) {
             var correctVal = input.getAttribute('data-correct');
             // Remove spaces/trim for better comparison

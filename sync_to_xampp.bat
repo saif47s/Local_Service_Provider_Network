@@ -1,7 +1,7 @@
 @echo off
 echo Syncing project to XAMPP...
-set "SOURCE=e:\final project\githubprojects\BCA-home-Services-Project-master\BCA-home-Services-Project-master"
-set "DEST=C:\xampp\htdocs\hs"
+set "SOURCE=e:\android\BCA-home-Services-Project-master"
+set "DEST=C:\xampp\htdocs\BCA-home-Services-Project-master"
 
 echo Source: %SOURCE%
 echo Destination: %DEST%

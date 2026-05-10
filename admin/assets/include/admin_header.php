@@ -244,8 +244,13 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
                                 <a class="dropdown-item" href="_generate_report.php"><i class="fa fa-book pr-2"></i>
                                     Report</a>
                                 <div class="dropdown-divider"></div>
+<<<<<<< HEAD
                                 <a class="dropdown-item" href="admin_profile.php"><i class="fa fa-user pr-2"></i>
                                     My Profile</a>
+=======
+                                <a class="dropdown-item" href="profile.php"><i class="fa fa-user pr-2"></i>
+                                    Profile</a>
+>>>>>>> 606a8a0 (Added comprehensive Frontend and Backend Defense Documentation and updated system logic)
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="logout.php"><i class="fa fa-power-off pr-2"></i>
                                     Logout</a>
@@ -377,6 +382,13 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
                             <li class="parent">
                                 <a href="revenue_view.php" class=""><i class="fa fa-chart-line mr-3"></i>
                                     <span class="none">Revenue Details </span>
+                                </a>
+                            </li>
+
+                            <!-- Fuel Price -->
+                            <li class="parent">
+                                <a href="fuel_price.php" class=""><i class="fa fa-gas-pump mr-3"></i>
+                                    <span class="none">Fuel Price </span>
                                 </a>
                             </li>
 

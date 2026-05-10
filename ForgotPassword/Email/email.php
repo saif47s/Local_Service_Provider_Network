@@ -111,6 +111,31 @@ if (isset($_POST['sendotp'])) {
                 header("location: ../forgotpassword.php");
             }
         }
+
+        //admin forgot password functionality
+        if ($role_id == 1) {
+            // admin email is stored directly in the login table
+            $femail = $login_row['email'];
+
+            if ($name == $fusername && $email == $femail) {
+
+                $otp = rand(1111, 9999);
+                $message = "Hey $name! Here is your One Time Password : <b>$otp</b> valid for 5 minutes. ";
+
+                // Use shared mailing function
+                require_once __DIR__ . '/../../php/send_email.php';
+                sendEmail($email, $subject, $message);
+
+                setcookie("otp", $otp, time() + 300);
+                setcookie("mname", $name, time() + 300);
+
+                echo "<script type='text/javascript'>alert('We have sent you OTP at $email');</script>";
+                echo "<script type='text/javascript'> document.location = '../otp.php'; </script>";
+            } else {
+                $_SESSION['statusfail'] = "Invalid Credentials! Please Try again.";
+                header("location: ../forgotpassword.php");
+            }
+        }
     } else {
         $_SESSION['statusfail'] = "Username doesn't exist! Please Try again.";
         header("location: ../forgotpassword.php");
