@@ -4,7 +4,9 @@
 //     die();
 // }
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['sp_loggedin']) || $_SESSION['sp_loggedin'] != true) {
     header("location: ../index.php");
@@ -60,7 +62,7 @@ if (!isset($_SESSION['sp_loggedin']) || $_SESSION['sp_loggedin'] != true) {
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <title><?php echo $title; ?> - Hyper Local Service Provider</title>
+    <title><?php echo isset($title) ? htmlspecialchars($title) : 'Workspace'; ?> - Hyper Local Service Provider</title>
 </head>
 
 
@@ -115,9 +117,51 @@ if (!isset($_SESSION['sp_loggedin']) || $_SESSION['sp_loggedin'] != true) {
                     <!--Search box and avatar-->
                     <div class="col-sm-8 col-4 text-right flex-header-menu justify-content-end">
                         <!-- <a href="logout.php" class="btn btn-sm btn-dark btn-round mr-3">Logout</a> -->
-                        <div class="search-rounded mr-3">
-                            <input type="text" class="form-control search-box" placeholder="Enter keywords.." />
+                        <div class="mr-4">
+                            <a id="bellLink" href="order_view.php" class="position-relative" style="font-size: 24px; color: #333; text-decoration: none;" title="View Orders">
+                                <i class="fa fa-bell"></i>
+                                <?php
+                                    try {
+                                        if (isset($_SESSION['sp_id']) && isset($conn)) {
+                                            $sp_id = intval($_SESSION['sp_id']);
+                                            $bell_query = "SELECT COUNT(*) as pending_count FROM user_order WHERE sp_id = $sp_id AND status = 'pending' LIMIT 1";
+                                            $bell_result = mysqli_query($conn, $bell_query);
+                                            if ($bell_result) {
+                                                $bell_row = mysqli_fetch_assoc($bell_result);
+                                                $pending_count = isset($bell_row['pending_count']) ? $bell_row['pending_count'] : 0;
+                                                if ($pending_count > 0) {
+                                                    echo '<span class="badge badge-danger" style="position: absolute; top: -8px; right: -12px; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">' . $pending_count . '</span>';
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception $e) {
+                                        // Silent fail - just show bell without count
+                                    }
+                                ?>
+                            </a>
                         </div>
+
+                        <script>
+                            // When bell is clicked, fetch latest order for this SP and redirect to its details
+                            (function() {
+                                $('#bellLink').on('click', function(e) {
+                                    e.preventDefault();
+                                    $.getJSON('get_latest_order.php')
+                                        .done(function(resp) {
+                                            if (resp && resp.order_id) {
+                                                var sp = resp.sp_id || '';
+                                                window.location.href = 'order_details.php?order_id=' + resp.order_id + '&sp_id=' + sp;
+                                            } else {
+                                                // fallback to order list
+                                                window.location.href = 'order_view.php';
+                                            }
+                                        })
+                                        .fail(function() {
+                                            window.location.href = 'order_view.php';
+                                        });
+                                });
+                            })();
+                        </script>
                         <div class="mr-4">
                             <a class="" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false">

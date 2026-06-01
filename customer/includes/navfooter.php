@@ -54,6 +54,9 @@ if (!defined('MYSITE')) {
                         <li>
                             <a href="logout.php" class="text-light">Logout</a>
                         </li>
+                        <li>
+                            <a href="review_and_help.php" class="text-light">Review and Help</a>
+                        </li>
                     </ul>
 
                 </div>

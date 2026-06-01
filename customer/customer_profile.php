@@ -1,6 +1,7 @@
 <?php
 define('MYSITE', true);
 include '../db/dbconnect.php';
+include '../includes/account_deletion_helper.php';
 
 $title = 'My Profile';
 $css_directory = '../css/main.min.css';
@@ -15,9 +16,30 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] != true) {
 
 $login_id = $_SESSION['login_id'];
 $customer_id = $_SESSION['customer_id'];
+$deletionPending = false;
+
+$deletionStatus = dp_get_login_deletion_status($conn, $login_id);
+if ($deletionStatus && (int) ($deletionStatus['deletion_request'] ?? 0) === 1) {
+    $deletionPending = true;
+}
 
 // Handle Profile Update
 $msg = "";
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['request_account_deletion'])) {
+    $deletionResult = dp_submit_deletion_request($conn, $login_id);
+    if ($deletionResult['ok']) {
+        $msg = '<div class="alert alert-success">' . htmlspecialchars($deletionResult['message']) . '</div>';
+        $deletionPending = true;
+    } else {
+        $msgClass = !empty($deletionResult['already_sent']) ? 'alert-warning' : 'alert-danger';
+        $msg = '<div class="alert ' . $msgClass . '">' . htmlspecialchars($deletionResult['message']) . '</div>';
+        if (!empty($deletionResult['already_sent'])) {
+            $deletionPending = true;
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
     $last_name = mysqli_real_escape_string($conn, $_POST['last_name']);
@@ -151,6 +173,25 @@ $row = mysqli_fetch_assoc($result);
                         <a href="logout.php" class="btn btn-danger btn-block mt-3"><i class="fas fa-power-off"></i>
                             Logout</a>
                     </form>
+
+                    <hr class="mt-4 mb-3">
+                    <h6 class="text-danger font-weight-bold">Delete Account</h6>
+                    <p class="text-muted small mb-3">
+                        Request admin to delete your customer account. Your account will remain active until admin approves.
+                    </p>
+                    <?php if ($deletionPending) { ?>
+                        <div class="alert alert-warning mb-0">
+                            <strong>Wait for admin response.</strong> Request already sent.
+                        </div>
+                    <?php } else { ?>
+                        <form action="" method="POST"
+                            onsubmit="return confirm('Send account deletion request to admin?');">
+                            <input type="hidden" name="request_account_deletion" value="1">
+                            <button type="submit" class="btn btn-outline-danger btn-block">
+                                <i class="fa fa-trash"></i> Delete Account
+                            </button>
+                        </form>
+                    <?php } ?>
                 </div>
             </div>
         </div>

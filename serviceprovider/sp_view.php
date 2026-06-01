@@ -1,403 +1,306 @@
 <?php
+define('MYSITE', true);
 include '../DataBase/dbconnect.php';
+include '../includes/account_deletion_helper.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['sp_loggedin']) || $_SESSION['sp_loggedin'] != true) {
+    header('location: ../login.php');
+    exit;
+}
+
+$title = 'My Profile';
 include 'assets/include/sp_header.php';
+
+$sp_id = (int) $_SESSION['sp_id'];
+$login_id = (int) $_SESSION['sp_login_id'];
+$showAlert = false;
+$showError = false;
+$deletionPending = false;
+
+$profile = null;
+$profile_sql = "SELECT sp.*, city.city_name
+        FROM sp
+        INNER JOIN city ON sp.city_id = city.city_id
+        WHERE sp.sp_id = '$sp_id' AND sp.login_id = '$login_id'
+        LIMIT 1";
+$profile_result = mysqli_query($conn, $profile_sql);
+if ($profile_result && mysqli_num_rows($profile_result) > 0) {
+    $profile = mysqli_fetch_assoc($profile_result);
+}
+
+$login_username = $_SESSION['sp_username'];
+$login_sql = "SELECT `username` FROM `login` WHERE `login_id` = '$login_id' LIMIT 1";
+$login_result = mysqli_query($conn, $login_sql);
+if ($login_result && mysqli_num_rows($login_result) > 0) {
+    $login_row = mysqli_fetch_assoc($login_result);
+    $login_username = $login_row['username'];
+}
+
+$deletionStatus = dp_get_login_deletion_status($conn, $login_id);
+if ($deletionStatus && (int) ($deletionStatus['deletion_request'] ?? 0) === 1) {
+    $deletionPending = true;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_account_deletion'])) {
+    $deletionResult = dp_submit_deletion_request($conn, $login_id);
+    if ($deletionResult['ok']) {
+        $showAlert = $deletionResult['message'];
+        $deletionPending = true;
+    } else {
+        $showError = $deletionResult['message'];
+        if (!empty($deletionResult['already_sent'])) {
+            $deletionPending = true;
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    if (!$profile) {
+        $showError = 'Profile not found. Cannot update.';
+    } else {
+    $sp_name = trim($_POST['sp_name'] ?? '');
+    $email = $profile['email']; // Email cannot be changed from profile
+    $phone = trim($_POST['phone'] ?? '');
+    $city_name = trim($_POST['sp_city'] ?? '');
+    $pincode = trim($_POST['pincode'] ?? '');
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $cpassword = $_POST['cpassword'] ?? '';
+
+    // Keep existing values when a field is left unchanged/empty
+    if ($sp_name === '') {
+        $sp_name = $profile['sp_name'];
+    }
+    if ($phone === '') {
+        $phone = $profile['phone'];
+    }
+    if ($city_name === '') {
+        $city_name = $profile['city_name'];
+    }
+    if ($pincode === '') {
+        $pincode = $profile['pincode'];
+    }
+    if ($username === '') {
+        $username = $login_username;
+    }
+
+    $sp_name = mysqli_real_escape_string($conn, $sp_name);
+    $email = mysqli_real_escape_string($conn, $email);
+    $phone = mysqli_real_escape_string($conn, $phone);
+    $city_name = mysqli_real_escape_string($conn, $city_name);
+    $pincode = mysqli_real_escape_string($conn, $pincode);
+    $username = mysqli_real_escape_string($conn, $username);
+
+    $city_id = (int) $profile['city_id'];
+    $city_result = mysqli_query($conn, "SELECT `city_id` FROM `city` WHERE `city_name` = '$city_name' LIMIT 1");
+    if ($city_result && mysqli_num_rows($city_result) > 0) {
+        $city_row = mysqli_fetch_assoc($city_result);
+        $city_id = (int) $city_row['city_id'];
+    } else {
+        $showError = 'Please select a valid city.';
+    }
+
+    if (!$showError && !preg_match('/^[0-9]{10,11}$/', $phone)) {
+        $showError = 'Phone must be 10 or 11 digits.';
+    }
+
+    if (!$showError && !preg_match('/^[0-9]{6}$/', $pincode)) {
+        $showError = 'Pincode must be 6 digits.';
+    }
+
+    if (!$showError) {
+        $username_check = mysqli_query(
+            $conn,
+            "SELECT `login_id` FROM `login` WHERE `username` = '$username' AND `login_id` != '$login_id' LIMIT 1"
+        );
+        if ($username_check && mysqli_num_rows($username_check) > 0) {
+            $showError = 'Username is already taken. Choose another.';
+        }
+    }
+
+    if (!$showError && $password !== '') {
+        if ($password !== $cpassword) {
+            $showError = 'Password and confirm password do not match.';
+        } elseif (!preg_match('/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/', $password)) {
+            $showError = 'Password must be at least 8 characters with upper, lower, and a number.';
+        }
+    }
+
+    if (!$showError) {
+        $update_sp = "UPDATE `sp` SET
+            `sp_name` = '$sp_name',
+            `email` = '$email',
+            `phone` = '$phone',
+            `city_id` = '$city_id',
+            `pincode` = '$pincode'
+            WHERE `sp_id` = '$sp_id' AND `login_id` = '$login_id'";
+
+        $update_login = "UPDATE `login` SET `username` = '$username' WHERE `login_id` = '$login_id'";
+
+        if (mysqli_query($conn, $update_sp) && mysqli_query($conn, $update_login)) {
+            if ($password !== '') {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $hash = mysqli_real_escape_string($conn, $hash);
+                mysqli_query($conn, "UPDATE `login` SET `password` = '$hash' WHERE `login_id` = '$login_id'");
+            }
+            $_SESSION['sp_username'] = $username;
+            $showAlert = 'Profile updated successfully.';
+        } else {
+            $showError = 'Could not update profile. ' . mysqli_error($conn);
+        }
+    }
+
+    // Reload profile after successful update
+    if ($showAlert) {
+        $profile_result = mysqli_query($conn, $profile_sql);
+        if ($profile_result && mysqli_num_rows($profile_result) > 0) {
+            $profile = mysqli_fetch_assoc($profile_result);
+        }
+        $login_result = mysqli_query($conn, $login_sql);
+        if ($login_result && mysqli_num_rows($login_result) > 0) {
+            $login_row = mysqli_fetch_assoc($login_result);
+            $login_username = $login_row['username'];
+        }
+    }
+    }
+}
 ?>
 
-
-
 <div class="col-sm-9 col-xs-12 content pt-3 pl-0">
+    <h5 class="mb-0"><strong>My Profile</strong></h5>
+    <span class="text-secondary">Workspace <i class="fa fa-angle-right"></i> Update profile</span>
 
-    <h5 class="mb-0"><strong>Service Provider</strong></h5>
-    <span class="text-secondary">Dashboard <i class="fa fa-angle-right"></i> View Service Provider Details</span>
     <div class="row mt-3">
         <div class="col-sm-12">
-            <!--Datatable-->
             <div class="mt-1 mb-3 p-3 button-container bg-white border shadow-sm">
+                <?php
+                if ($showAlert) {
+                    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success!</strong> ' . htmlspecialchars($showAlert) . '
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
+                }
+                if ($showError) {
+                    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error!</strong> ' . htmlspecialchars($showError) . '
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
+                }
+                ?>
 
-                <div class="table-responsive">
-                    <table id="example" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Sno.</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>City</th>
-                                <th>Pincode</th>
-                                <th>Operation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php // SERVICE PROVIDER VIEW CODE. Data get from SP & CITY table using inner joinn becase we need "city name" from city table.
-                            $sp_id = $_SESSION['sp_id'];
-                            $sql = "SELECT sp.* , city.*
-                            FROM sp INNER JOIN city 
-                            ON sp.city_id=city.city_id
-                            WHERE sp.sp_id = '$sp_id'";
-                            $result = mysqli_query($conn, $sql);
-                            if ($result) {
-                                $sno = 0;
-                                while ($row = mysqli_fetch_assoc($result)) {
-                                    $sno = $sno + 1;
-                                    $sp_id = $row['sp_id'];
-                                    $sp_name = $row['sp_name'];
-                                    $email = $row['email'];
-                                    $phone = $row['phone'];
-                                    $city = $row['city_name'];
-                                    $pincode = $row['pincode'];
+                <?php if ($profile) { ?>
+                    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+                        <input type="hidden" name="update_profile" value="1">
+                        <p class="text-muted small">Change only the fields you need, then click Update Profile.</p>
 
-                                    echo '<tr>
-                                                <td>' . $sno . '</td>
-                                                <td>' . $sp_name . '</td>
-                                                <td>' . $email . '</td>
-                                                <td>' . $phone . '</td>
-                                                <td>' . $city . '</td>
-                                                <td>' . $pincode . '</td>
-                                                <td>
-                                                
-                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">Edit
-                </button>
-
-                <!-- Modal -->
-                <div class="modal fade bd-example-modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title text-secondary" id="exampleModalCenterTitle"><strong>Modal title</strong></h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                        <div class="form-row">
+                            <div class="form-group col-md-12 input-group-sm">
+                                <label for="sp_name">Name</label>
+                                <input type="text" class="form-control" id="sp_name" name="sp_name"
+                                    value="<?php echo htmlspecialchars($profile['sp_name']); ?>">
                             </div>
-                            <div class="modal-body">
-                                <!-- modalbody start -->
-                                <form class="needs-validation" action="' . $_SERVER['PHP_SELF'] . '" method="post" novalidate>
-                                    <!-- name & email line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12 input-group-sm">
-                                            <label for="spname">Name</label>
-                                            <input type="text" class="form-control" id="sp_name" name="sp_name" required>
-                                            <!-- <div class="valid-feedback">Looks good!</div> -->
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="email">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" aria-describedby="emailFeedback" required>
-                                            <div id="emailFeedback" class="invalid-feedback">
-                                                Please provide a valid email.
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="phone">Phone No.</label>
-                                            <!-- <input type="tel" class="form-control" required pattern="^[0-9-+\s()]{10,16}" data-for="phoneNumber"> -->
-                                            <input type="tel" class="form-control" pattern="\d{10}" data-for="phoneNumber" name="phone" aria-describedby="phoneFeedback" required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Please provide a valid Phone number.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- city line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-4 input-group-sm">
-                                            <label for="city">City</label>                                        
-                                            <select id="sp_city" class=" custom-select" name="sp_city" required>
-                                                <option value="">Choose City</option>
-                                                ' ?>         <?php //fetch city in MODAL
-                                                                  $sql2 = "SELECT * FROM `city`";
-                                                                  $result2 = mysqli_query($conn, $sql2);
-                                                                  if ($result2) {
-                                                                      while ($row2 = mysqli_fetch_assoc($result2)) {
-                                                                          $city_name = $row2['city_name'];
-                                                                          echo '<option value="' . $city_name . '">' . $city_name . '</option>';
-                                                                      }
-                                                                  }
-
-
-                                                                  ?>         <?php echo '
-                                            
-                                        
-
-                                            </select>
-                                            <div class="invalid-feedback">Please choose a city.</div>
-                                        </div>
-                                        <div class="form-group col-md-2 input-group-sm">
-                                            <label for="Pincode">Pincode</label>
-                                            <input type="text" class="form-control" pattern="\d{6}" name="pincode" id="pincode" required>
-                                        </div>
-                                    </div>
-                                    <hr class="mt-4 mb-4">
-                                    <!-- usename line -->
-                                    <div class="form-row mt-4">
-                                        <div class="form-group col-md-6">
-                                            <label for="inlineFormInputGroupUsername2">Create Username</label>
-                                            <div class="input-group mb-2 mr-sm-2 input-group-sm">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text bg-c1-1 text-light">@</div>
-                                                </div>
-                                                <input type="text" class="form-control" pattern="(?=.*[a-z]).{4,}" id="username" name="username" placeholder="sahil_18" aria-describedby="inputGroupPrepend" required>
-
-                                                <div class="invalid-feedback">
-                                                    Please choose a right username.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- password line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="password">Create Password</label>
-                                            <input type="password" class="form-control" id="password" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Must contain at least one number and one uppercase and lowercase letter, and at least 8 or
-                                                more characters.
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="confirmpassword">Confirm Password</label>
-                                            <input type="password" class="form-control" id="cpassword" name="cpassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Password does not matched.
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <a href=""><button type="submit" class="btn btn-c1-1">Sign in</button></a>
-                                    <a href="index.php" class="btn btn-outline-secondary">Cancel</a>
-                                </form>
-                                <!-- modalbody end -->
+                            <div class="form-group col-md-6 input-group-sm">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email"
+                                    value="<?php echo htmlspecialchars($profile['email']); ?>" readonly>
+                                <small class="text-muted">Email cannot be changed.</small>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary">Save changes</button>
+                            <div class="form-group col-md-6 input-group-sm">
+                                <label for="phone">Phone No.</label>
+                                <input type="tel" class="form-control" name="phone" id="phone"
+                                    value="<?php echo htmlspecialchars($profile['phone']); ?>"
+                                    maxlength="11" inputmode="numeric"
+                                    title="10 or 11 digit phone number">
                             </div>
                         </div>
-                    </div>
-                </div>
-                 
-                                                
-                                                
-                <button type="button" class="btn btn-danger">Remove</button>
-                
-                </td>';
-                                }
-                            }
-                            ?>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Sno.</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>City</th>
-                                <th>Pincode</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
 
-            <!--/Datatable-->
-
-            <!--Modals position-->
-            <div class="mt-1 mb-3 p-3 button-container bg-white border shadow-sm">
-
-                <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#exampleModalCenter">
-                    Vertically centered
-                </button>
-
-                <!-- Modal -->
-                <div class="modal fade bd-example-modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog"
-                    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title text-secondary" id="exampleModalCenterTitle"><strong>Modal
-                                        title</strong></h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                        <div class="form-row">
+                            <div class="form-group col-md-4 input-group-sm">
+                                <label for="sp_city">City</label>
+                                <select id="sp_city" class="custom-select" name="sp_city">
+                                    <option value="">Choose City</option>
+                                    <?php
+                                    $city_sql = "SELECT * FROM `city` ORDER BY `city_name`";
+                                    $city_result = mysqli_query($conn, $city_sql);
+                                    if ($city_result) {
+                                        while ($city_row = mysqli_fetch_assoc($city_result)) {
+                                            $selected = ($city_row['city_name'] === $profile['city_name']) ? 'selected' : '';
+                                            echo '<option value="' . htmlspecialchars($city_row['city_name']) . '" ' . $selected . '>'
+                                                . htmlspecialchars($city_row['city_name']) . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
-                            <div class="modal-body">
-                                <!-- modalbody start -->
-                                <form class="needs-validation" action="<?php echo $_SERVER['PHP_SELF'] ?>" method="post"
-                                    novalidate>
-                                    <!-- name & email line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12 input-group-sm">
-                                            <label for="spname">Name</label>
-                                            <input type="text" class="form-control" id="sp_name" name="sp_name"
-                                                required>
-                                            <!-- <div class="valid-feedback">Looks good!</div> -->
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="email">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email"
-                                                aria-describedby="emailFeedback" required>
-                                            <div id="emailFeedback" class="invalid-feedback">
-                                                Please provide a valid email.
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="phone">Phone No.</label>
-                                            <!-- <input type="tel" class="form-control" required pattern="^[0-9-+\s()]{10,16}" data-for="phoneNumber"> -->
-                                            <input type="tel" class="form-control" pattern="\d{10}"
-                                                data-for="phoneNumber" name="phone" aria-describedby="phoneFeedback"
-                                                required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Please provide a valid Phone number.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- city line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-4 input-group-sm">
-                                            <label for="city">City</label>
-                                            <select id="sp_city" class=" custom-select" name="sp_city" required>
-                                                <option value="">Choose City</option>
-                                                <?php // category view code. Data get from category table
-                                                $sql = "SELECT * FROM `city`";
-                                                $result = mysqli_query($conn, $sql);
-                                                if ($result) {
-                                                    while ($row = mysqli_fetch_assoc($result)) {
-                                                        $city_name = $row['city_name'];
-                                                        echo '<option value="' . $city_name . '">' . $city_name . '</option>';
-                                                    }
-                                                }
-                                                ?>
-                                                <!-- <option value="two">.this..</option>
-                                                    <option value="three">.and..</option>
-                                                    <option value="five">.that..</option> -->
-                                            </select>
-                                            <div class="invalid-feedback">Please choose a city.</div>
-                                        </div>
-                                        <div class="form-group col-md-2 input-group-sm">
-                                            <label for="Pincode">Pincode</label>
-                                            <input type="text" class="form-control" pattern="\d{6}" name="pincode"
-                                                id="pincode" required>
-                                        </div>
-                                    </div>
-                                    <hr class="mt-4 mb-4">
-                                    <!-- usename line -->
-                                    <div class="form-row mt-4">
-                                        <div class="form-group col-md-6">
-                                            <label for="inlineFormInputGroupUsername2">Create Username</label>
-                                            <div class="input-group mb-2 mr-sm-2 input-group-sm">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text bg-c1-1 text-light">@</div>
-                                                </div>
-                                                <input type="text" class="form-control" pattern="(?=.*[a-z]).{4,}"
-                                                    id="username" name="username" placeholder="sahil_18"
-                                                    aria-describedby="inputGroupPrepend" required>
-
-                                                <div class="invalid-feedback">
-                                                    Please choose a right username.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- password line -->
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="password">Create Password</label>
-                                            <input type="password" class="form-control" id="password" name="password"
-                                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Must contain at least one number and one uppercase and lowercase letter,
-                                                and at least 8 or
-                                                more characters.
-                                            </div>
-                                        </div>
-                                        <div class="form-group col-md-6 input-group-sm">
-                                            <label for="confirmpassword">Confirm Password</label>
-                                            <input type="password" class="form-control" id="cpassword" name="cpassword"
-                                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
-                                            <div id="phoneFeedback" class="invalid-feedback">
-                                                Password does not matched.
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <a href=""><button type="submit" class="btn btn-c1-1">Sign in</button></a>
-                                    <a href="index.php" class="btn btn-outline-secondary">Cancel</a>
-                                </form>
-                                <!-- modalbody end -->
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary">Save changes</button>
+                            <div class="form-group col-md-2 input-group-sm">
+                                <label for="pincode">Pincode</label>
+                                <input type="text" class="form-control" name="pincode" id="pincode"
+                                    value="<?php echo htmlspecialchars($profile['pincode']); ?>"
+                                    maxlength="6" inputmode="numeric" title="6 digit pincode">
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- modal -->
+
+                        <hr class="mt-4 mb-4">
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="username">Username</label>
+                                <div class="input-group mb-2 mr-sm-2 input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text bg-c1-1 text-light">@</div>
+                                    </div>
+                                    <input type="text" class="form-control" id="username"
+                                        name="username" value="<?php echo htmlspecialchars($login_username); ?>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6 input-group-sm">
+                                <label for="password">New Password <small class="text-muted">(optional)</small></label>
+                                <input type="password" class="form-control" id="password" name="password" autocomplete="new-password">
+                            </div>
+                            <div class="form-group col-md-6 input-group-sm">
+                                <label for="cpassword">Confirm New Password</label>
+                                <input type="password" class="form-control" id="cpassword" name="cpassword" autocomplete="new-password">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-c1-1">Update Profile</button>
+                        <a href="sp_index.php" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+
+                    <hr class="mt-4 mb-3">
+                    <h6 class="text-danger font-weight-bold">Delete Account</h6>
+                    <p class="text-muted small mb-3">
+                        Request admin to delete your service provider account. Your account will remain active until admin approves.
+                    </p>
+                    <?php if ($deletionPending) { ?>
+                        <div class="alert alert-warning mb-0">
+                            <strong>Wait for admin response.</strong> Request already sent.
+                        </div>
+                    <?php } else { ?>
+                        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post"
+                            onsubmit="return confirm('Send account deletion request to admin?');">
+                            <input type="hidden" name="request_account_deletion" value="1">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fa fa-trash"></i> Delete Account
+                            </button>
+                        </form>
+                    <?php } ?>
+                <?php } else { ?>
+                    <div class="alert alert-warning mb-0">Profile not found. Please contact support.</div>
+                <?php } ?>
             </div>
-            <!--/Modal position-->
-
-
-
-
-
-
-            <!-- try-start-jsgrid BASIC SCENARIO-->
-            <!-- <div class="row mt-3">
-                <div class="col-sm-12">
-    
-                    <div class="mt-1 mb-4 p-3 button-container bg-white border shadow-sm">
-                        <h6 class="mb-2">Basic Scenario</h6>
-
-                        <div id="jsGrid"></div>
-                    </div>
-                 
-
-                </div>
-            </div> -->
-            <!-- try-end-jsgrid BASIC SCENARIO -->
-
-
-
-
-
-
-
         </div>
     </div>
+</div>
 
-
-
-
-
-
-    <!-- Page JavaScript Files-->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/jquery-1.12.4.min.js"></script>
-    <!--Popper JS-->
-    <script src="assets/js/popper.min.js"></script>
-    <!--Bootstrap-->
-    <script src="assets/js/bootstrap.min.js"></script>
-    <!--Sweet alert JS-->
-    <script src="assets/js/sweetalert.js"></script>
-    <!--Progressbar JS-->
-    <script src="assets/js/progressbar.min.js"></script>
-    <!--Charts-->
-    <!--Canvas JS-->
-    <script src="assets/js/charts/canvas.min.js"></script>
-    <!--Bootstrap Calendar JS-->
-    <script src="assets/js/calendar/bootstrap_calendar.js"></script>
-    <script src="assets/js/calendar/demo.js"></script>
-    <!--Bootstrap Calendar-->
-    <!--Datatable-->
-    <script src="assets/js/jquery.dataTables.min.js"></script>
-    <script src="assets/js/dataTables.bootstrap4.min.js"></script>
-    <!--JsGrid table-->
-    <script src="assets/js/jsgrid.min.js"></script>
-    <script src="assets/js/jsgrid-demo.php"></script>
-
-    <!--Custom Js Script-->
-    <script src="assets/js/custom.js"></script>
-    <!--Custom Js Script-->
-
-    <script>
-        $('#example').DataTable();
-    </script>
-    <?php
-    include 'assets/include/sp_footer.php';
-    ?>
+<?php include 'assets/include/sp_footer.php'; ?>

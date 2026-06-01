@@ -14,6 +14,44 @@ include 'includes/navbar.php';
 
 
     <div class="container">
+        <?php
+        if (isset($_SESSION['cancel_success'])) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Success! </strong> ' . htmlspecialchars($_SESSION['cancel_success']) . '
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+            unset($_SESSION['cancel_success']);
+        }
+        if (isset($_SESSION['cancel_error'])) {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error! </strong> ' . htmlspecialchars($_SESSION['cancel_error']) . '
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+            unset($_SESSION['cancel_error']);
+        }
+        if (isset($_SESSION['review_success'])) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Success! </strong> ' . htmlspecialchars($_SESSION['review_success']) . '
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+            unset($_SESSION['review_success']);
+        }
+        if (isset($_SESSION['review_error'])) {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error! </strong> ' . htmlspecialchars($_SESSION['review_error']) . '
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+            unset($_SESSION['review_error']);
+        }
+        ?>
         <br>
         <br>
 
@@ -34,6 +72,16 @@ include 'includes/navbar.php';
                 $due_date = $row1['due_date'];
                 $estimated_date = date('j F, Y g:i A', strtotime($due_date));
                 $real_order_date = date('j F, Y', strtotime($order_date));
+                
+                $show_cancel = false;
+                $check_active_sql = "SELECT COUNT(*) as active_count FROM `user_order` WHERE `order_id` = $order_id AND (`status` = 'pending' OR `status` = 'inprogress')";
+                $check_active_res = mysqli_query($conn, $check_active_sql);
+                if ($check_active_res) {
+                    $active_row = mysqli_fetch_assoc($check_active_res);
+                    if ($active_row['active_count'] > 0) {
+                        $show_cancel = true;
+                    }
+                }
                 ?>
 
                 <div class="bg-dark p-5">
@@ -101,6 +149,9 @@ include 'includes/navbar.php';
                                                 if ($status == 'uncompleted') {
                                                     echo '<span class="badge badge-secondary">Uncompleted</span>';
                                                 }
+                                                if ($status == 'cancelled') {
+                                                    echo '<span class="badge badge-danger">Cancelled by Customer</span>';
+                                                }
                                                 ?>
                                             </td>
                                             <td><?php echo $qty ?></td>
@@ -146,14 +197,62 @@ include 'includes/navbar.php';
                             <tr>
                                 <th colspan="7"></th>
                                 <td>
-                                    <form action="../php/invoice.php" method="post">
-                                        <button type="submit" name="invoice" class="btn btn-success">Invoice</button>
-                                        <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
-                                        <input type="hidden" name="customer_id" value="<?php echo $customer_id ?>">
-                                        <!-- <button class="btn btn-danger">Cancel Order</button> -->
-                                    </form>
+                                    <div class="d-flex align-items-center flex-wrap">
+                                        <form action="../php/invoice.php" method="post" class="mr-2" style="margin-bottom:0;">
+                                            <button type="submit" name="invoice" class="btn btn-success">Invoice</button>
+                                            <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
+                                            <input type="hidden" name="customer_id" value="<?php echo $customer_id ?>">
+                                        </form>
+                                         <?php if ($show_cancel) { ?>
+                                         <form action="cancel_order.php" method="post" class="mr-2" style="margin-bottom:0;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                             <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
+                                             <button type="submit" name="cancel_order" class="btn btn-danger">Cancel Order</button>
+                                         </form>
+                                         <?php } ?>
+                                         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#reviewModal<?php echo $order_id ?>">Write Review</button>
+                                    </div>
                                 </td>
                             </tr>
+                            
+                            <!-- Review Modal -->
+                            <div class="modal fade" id="reviewModal<?php echo $order_id ?>" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="reviewModalLabel">Write Review</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <form action="../php/submit_review.php" method="POST">
+                                            <div class="modal-body">
+                                                <div class="form-group">
+                                                    <label for="rating<?php echo $order_id ?>">Rating</label>
+                                                    <select class="form-control" id="rating<?php echo $order_id ?>" name="rating" required>
+                                                        <option value="">Select Rating</option>
+                                                        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                                        <option value="4">⭐⭐⭐⭐ Good</option>
+                                                        <option value="3">⭐⭐⭐ Average</option>
+                                                        <option value="2">⭐⭐ Poor</option>
+                                                        <option value="1">⭐ Very Poor</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="review<?php echo $order_id ?>">Review</label>
+                                                    <textarea class="form-control" id="review<?php echo $order_id ?>" name="review_text" rows="4" placeholder="Write your review..." required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                                            </div>
+                                            <input type="hidden" name="order_id" value="<?php echo $order_id ?>">
+                                            <input type="hidden" name="customer_id" value="<?php echo $customer_id ?>">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Review Modal End -->
                         </table>
                     </div>
                 </div>

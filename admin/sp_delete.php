@@ -8,7 +8,7 @@ if (isset($_GET['spid']) && isset($_GET['loginid'])) {
 
     // Soft Delete: Update login status to 'deleted'
     // We also set SP status to 'deactive' so they don't appear in public lists if any query checks that
-    $sql = "UPDATE `login` SET `account_status` = 'deleted' WHERE `login_id` = '$login_id'";
+    $sql = "UPDATE `login` SET `account_status` = 'deleted', `deletion_request` = 0, `activation_request` = 0 WHERE `login_id` = '$login_id'";
     $result = mysqli_query($conn, $sql);
 
     // Optional: Also mark SP table as deactive for consistency

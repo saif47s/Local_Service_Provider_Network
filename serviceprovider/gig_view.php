@@ -1,5 +1,6 @@
 <?php
-include '../db/dbconnect.php';
+define('MYSITE', true);
+include '../DataBase/dbconnect.php';
 $title = 'View Gig';
 include 'assets/include/sp_header.php';
 ?>

@@ -97,11 +97,9 @@ include 'assets/include/sp_header.php';
 
                                             <td class="align-middle text-center">
 
-                                                <a
-                                                    href="order_details.php?order_id=<?php echo $order_id ?>&sp_id=<?php echo $sp_id ?>"><button
-                                                        class="btn btn-theme mb-2" title="See Order Details">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
+                                                <a href="order_details.php?order_id=<?php echo $order_id ?>&sp_id=<?php echo $sp_id ?>"
+                                                   class="btn btn-theme mb-2" title="See Order Details">
+                                                    <i class="fa fa-eye"></i>
                                                 </a>
                                                 <!-- <button class="btn btn-success mb-2" data-toggle="modal" data-target="#orderUpdate"><i class="fa fa-pencil"></i></button> -->
                                                 <!-- <button class="btn btn-danger mb-2"><i class="fas fa-trash"></i></button> -->

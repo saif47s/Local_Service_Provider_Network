@@ -1,0 +1,29 @@
+Ran command: `C:\xampp\mysql\bin\mysqldump.exe -u root hs > e:\android\home-Services-Project\hs_database.sql`
+Ran command: `xcopy "e:\android\home-Services-Project" "C:\xampp\htdocs\home-Services-Project" /E /H /C /I /Y /D /EXCLUDE:exclude_list.txt`
+
+Maine tamam changes ko finalise aur save kar diya hai. Maine aapki asani ke liye database ka aik backup bhi bana diya hai taake aap ise kisi bhi doosre PC par asani se chala sakein.
+
+### 1. Doosre PC par Run karne ka Tareeqa:
+
+Is project ko kisi bhi PC par chalane ke liye aapko ye steps follow karne honge:
+
+1.  **XAMPP Install Karein:** Doosre PC par XAMPP download aur install karein.
+2.  **Files Copy Karein:** Is folder (`home-Services-Project`) ko copy karein aur doosre PC ke **`C:\xampp\htdocs\`** folder ke andar paste kar dein.
+3.  **Database Import Karein:**
+    *   XAMPP Control Panel khol kar Apache aur MySQL ko "Start" karein.
+    *   Browser mein `localhost/phpmyadmin` kholien.
+    *   Naya database banayein jis ka naam **`hs`** rakhein.
+    *   "Import" par click karein aur project folder mein mojood **`hs_database.sql`** file select kar ke "Go" par click kar dein.
+4.  **Database Configuration Check Karein:**
+    *   `DataBase/dbconnect.php` file khol kar check karein ke `$database = "hs";` aur credentials (root/empty password) sahi hain.
+5.  **Project Run Karein:**
+    *   Browser mein `localhost/home-Services-Project/index.php` likh kar enter karein.
+
+### 2. Kya Kuch Save Kiya Gaya?
+- **Dynamic Pricing:** Area, Urgency, aur Provider Schedule ke hisab se sahi pricing.
+- **Admin Panel:** Profile update (Old password verification ke sath), Admin email change, aur Fuel Price manage karne ki settings.
+- **Cart Enhancements:** Pincode validation (5 digits), Time validation (Past time prevention), aur Fuel Charges terms.
+- **Bug Fixes:** Forgot Password blank page masla solve, aur Admin ko Services delete karne ka haq.
+- **Database Backup:** Maine `hs_database.sql` file project root mein generate kar di hai.
+
+Aapka project ab mukammal taur par updated aur portable hai. Agar mazeed koi sawal ho to batayein!

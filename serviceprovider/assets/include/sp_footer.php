@@ -63,7 +63,7 @@
  <script src="assets/js/dataTables.bootstrap4.min.js"></script>
  <!--JsGrid table-->
  <script src="assets/js/jsgrid.min.js"></script>
- <script src="assets/js/jsgrid-demo.php"></script>
+ <script src="assets/js/jsgrid-demo.js"></script>
  <!--Switchery JS-->
  <script src="assets/js/switchery.min.js"></script>
  <!--Bootstrap tagsinput-->
@@ -73,10 +73,26 @@
  <script src="assets/js/custom.js"></script>
  <!--Custom Js Script-->
  <script>
+     (function () {
+         function hideLoader() {
+             var loader = document.querySelector('.loader-wrapper');
+             if (loader) {
+                 loader.style.display = 'none';
+             }
+         }
+         document.addEventListener('DOMContentLoaded', hideLoader);
+         window.addEventListener('load', hideLoader);
+     })();
+ </script>
+ <script>
      //Nice select
-     $('.bulk-actions').niceSelect();
+     if ($.fn.niceSelect) {
+         $('.bulk-actions').niceSelect();
+     }
      //Order list dataTable
-     $("#productList").DataTable();
+     if ($.fn.DataTable && $('#productList').length) {
+         $("#productList").DataTable();
+     }
  </script>
  </body>
 

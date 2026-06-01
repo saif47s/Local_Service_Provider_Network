@@ -110,6 +110,9 @@ include 'assets/include/sp_header.php';
                                                     if ($status == 'uncompleted') {
                                                         echo '<span class="badge badge-secondary">Uncompleted</span>';
                                                     }
+                                                    if ($status == 'cancelled') {
+                                                        echo '<span class="badge badge-danger">Cancelled by Customer</span>';
+                                                    }
                                                     ?>
                                                 </td>
                                                 <td><?php echo $line_total ?></td>
@@ -131,7 +134,7 @@ include 'assets/include/sp_header.php';
                                                         </form>
                                                     <?php
                                                     }
-                                                    if ($status == 'inprogress' || $status == 'completed' || $status == 'uncompleted') {
+                                                    if ($status == 'inprogress') {
                                                     ?>
                                                         <form action="_order_status.php" method="POST">
                                                             <div class="btn-group">
