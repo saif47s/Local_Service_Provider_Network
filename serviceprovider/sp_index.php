@@ -83,7 +83,7 @@ $sp_id = $_SESSION['sp_id'];
 
             <div class="col-lg-4 col-md-4 col-sm-6 col-12 mb-3">
                 <div class="bg-white border shadow">
-                    <a href="sp_view.php">
+                    <a href="order_view.php">
                         <div class="media p-4">
                             <div class="align-self-center mr-3 rounded-circle notify-icon bg-theme">
                                 <i class="fa fa-check-circle"></i>
