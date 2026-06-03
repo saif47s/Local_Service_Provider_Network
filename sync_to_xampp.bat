@@ -1,7 +1,7 @@
 @echo off
 echo Syncing project to XAMPP...
-set "SOURCE=e:\android\BCA-home-Services-Project-master"
-set "DEST=C:\xampp\htdocs\BCA-home-Services-Project-master"
+set "SOURCE=D:\usb\home-Services-Project"
+set "DEST=C:\xampp\htdocs\home-Services-Project"
 
 echo Source: %SOURCE%
 echo Destination: %DEST%
